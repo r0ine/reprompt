@@ -111,7 +111,7 @@ def serve(host, port, model, workers, reload):
     \b
     Examples:
       reprompt serve
-      reprompt serve --port 9000 --model ~/models/clarify.gguf
+      reprompt serve --port 9000 --model ~/models/reprompt.gguf
     """
     import os
 

@@ -1,6 +1,6 @@
 """REST API server — self-hostable prompt rewriting service.
 
-    reprompt serve --model ~/models/clarify.gguf --port 8741
+    reprompt serve --model ~/models/reprompt.gguf --port 8741
     curl -X POST http://localhost:8741/v1/rewrite \
          -H 'Content-Type: application/json' \
          -d '{"prompt": "login sayfası yap", "target": "claude-code"}'
@@ -217,7 +217,7 @@ def openai_compat(body: dict):
     result = engine.rewrite(prompt=user_msg, target=target)
 
     return {
-        "id": "clarify-0",
+        "id": "reprompt-0",
         "object": "chat.completion",
         "choices": [
             {
