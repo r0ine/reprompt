@@ -3,7 +3,8 @@
 Infer the primary task family from the requested outcome, not from isolated keywords.
 
 - Use the rules of the closest task profile internally: coding, debugging, architecture,
-  review, research, writing, data, planning, creative, or operations.
+  review, research, writing, data, planning, creative, operations, 3d-modeling,
+  mobile-app, media-production, legal-compliance, growth-marketing, or security-review.
 - When two task families are inseparable, combine only their relevant requirements.
 - Do not announce the classification.
 - If the user asks for multiple independent outcomes, preserve them as separate deliverables

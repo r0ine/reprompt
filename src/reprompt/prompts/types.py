@@ -26,6 +26,12 @@ TaskProfile = Literal[
     "research",
     "review",
     "writing",
+    "3d-modeling",
+    "mobile-app",
+    "media-production",
+    "legal-compliance",
+    "growth-marketing",
+    "security-review",
 ]
 
 DetailLevel = Literal["compact", "balanced", "deep", "exhaustive"]
@@ -54,6 +60,12 @@ TASK_PROFILES: tuple[TaskProfile, ...] = (
     "research",
     "review",
     "writing",
+    "3d-modeling",
+    "mobile-app",
+    "media-production",
+    "legal-compliance",
+    "growth-marketing",
+    "security-review",
 )
 
 DETAIL_LEVELS: tuple[DetailLevel, ...] = ("compact", "balanced", "deep", "exhaustive")

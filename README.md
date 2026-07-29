@@ -28,11 +28,13 @@ Hazır profil sayıları:
 
 - 9 hedef: `chatgpt`, `claude-code`, `codex`, `cursor`, `deepseek`, `gemini`,
   `github-copilot`, `grok`, `generic`
-- 11 görev: `auto`, `architecture`, `coding`, `creative`, `data`, `debugging`,
-  `operations`, `planning`, `research`, `review`, `writing`
+- 17 görev: `auto`, `architecture`, `coding`, `creative`, `data`, `debugging`,
+  `operations`, `planning`, `research`, `review`, `writing`, `3d-modeling`,
+  `mobile-app`, `media-production`, `legal-compliance`, `growth-marketing`,
+  `security-review`
 - 4 ayrıntı seviyesi: `compact`, `balanced`, `deep`, `exhaustive`
 
-Bu yapı 396 farklı bileşimi destekler. `exhaustive`, dosyayı veya çıktıyı yapay biçimde
+Bu yapı 612 farklı bileşimi destekler. `exhaustive`, dosyayı veya çıktıyı yapay biçimde
 şişirmez; ilgili riskleri, karar noktalarını, teslimleri ve doğrulama şartlarını mümkün
 olduğunca eksiksiz kapsar.
 
