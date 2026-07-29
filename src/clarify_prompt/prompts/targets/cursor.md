@@ -1,11 +1,15 @@
-## Target profile: Cursor
+## Target profile: cursor
 
-The rewritten prompt will be pasted into Cursor (IDE-integrated coding assistant). Cursor already sees open files and selection context; keep the prompt short and direct.
+The rewritten prompt will be used inside an IDE with file and selection context.
 
-- Use imperative mood: "Extract...", "Rename...", "Replace...", "Preserve...".
-- Refer to file/selection through IDE-relative language: "the selected function", "this component", "the imports at the top".
-- Do not restate what Cursor already sees. Do not paste large code blocks — Cursor has them.
-- Prefer 4–8 short numbered instructions over a long paragraph.
-- End with a one-line invariant list: "Do not: touch tests / rename exports / change public API." — clear "do nots" prevent Cursor from over-editing.
+- Start with a direct imperative describing the desired code change.
+- Refer to explicitly mentioned files and symbols; use “selected code” or “current file”
+  only when the input shows that IDE context exists.
+- Keep repository background brief and put invariants next to the change they constrain.
+- Use a short ordered implementation list followed by verification.
+- State what must not change: public API, exports, behavior, tests, schema, styling, or file
+  scope, but only when implied by the request.
+- Avoid pasting large code blocks the IDE already contains.
+- End with the expected diff scope and the checks Cursor should run or preserve.
 
-Do not answer the user's request. Only rewrite it into the Cursor-optimized structure above.
+Only rewrite the request. Do not perform it.

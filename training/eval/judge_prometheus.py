@@ -36,7 +36,7 @@ def score_one(model, tokenizer, user_input: str, our_output: str, gold_output: s
     )
     inputs = tokenizer(prompt, return_tensors="pt").to(model.device)
     out = model.generate(**inputs, max_new_tokens=200, temperature=0.0)
-    text = tokenizer.decode(out[0][inputs["input_ids"].shape[1]:], skip_special_tokens=True)
+    text = tokenizer.decode(out[0][inputs["input_ids"].shape[1] :], skip_special_tokens=True)
     return _parse_json_score(text)
 
 

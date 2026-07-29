@@ -2,24 +2,21 @@
 
 from __future__ import annotations
 
-import math
-
 import pytest
 
 torch = pytest.importorskip("torch", reason="torch kurulu degil")
 
-from training.model.config import ClarifyConfig, SMALL, BASE, LARGE
-from training.model.transformer import (
-    ClarifyGPT,
-    precompute_rope,
-    apply_rope,
-    repeat_kv,
-    RMSNorm,
+from training.model.config import BASE, LARGE, SMALL, ClarifyConfig  # noqa: E402
+from training.model.transformer import (  # noqa: E402
     Attention,
+    ClarifyGPT,
     FeedForward,
+    RMSNorm,
     TransformerBlock,
+    apply_rope,
+    precompute_rope,
+    repeat_kv,
 )
-
 
 # ── Config presets ──────────────────────────────────────────────
 
@@ -178,7 +175,9 @@ class TestFeedForward:
 
 class TestTransformerBlock:
     def test_residual_connection(self):
-        cfg = ClarifyConfig(dim=128, n_heads=4, n_kv_heads=2, vocab_size=100, n_layers=1, dropout=0.0)
+        cfg = ClarifyConfig(
+            dim=128, n_heads=4, n_kv_heads=2, vocab_size=100, n_layers=1, dropout=0.0
+        )
         block = TransformerBlock(cfg)
         block.eval()
         rope = precompute_rope(cfg.head_dim, 16)
@@ -195,8 +194,13 @@ class TestClarifyGPT:
     @pytest.fixture
     def tiny_model(self):
         cfg = ClarifyConfig(
-            vocab_size=256, dim=64, n_layers=2, n_heads=4, n_kv_heads=2,
-            max_seq_len=32, dropout=0.0,
+            vocab_size=256,
+            dim=64,
+            n_layers=2,
+            n_heads=4,
+            n_kv_heads=2,
+            max_seq_len=32,
+            dropout=0.0,
         )
         return ClarifyGPT(cfg)
 
@@ -227,7 +231,11 @@ class TestClarifyGPT:
 
     def test_no_weight_tying_when_disabled(self):
         cfg = ClarifyConfig(
-            vocab_size=256, dim=64, n_layers=2, n_heads=4, n_kv_heads=2,
+            vocab_size=256,
+            dim=64,
+            n_layers=2,
+            n_heads=4,
+            n_kv_heads=2,
             tie_embeddings=False,
         )
         m = ClarifyGPT(cfg)

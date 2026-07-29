@@ -2,14 +2,9 @@
 
 from __future__ import annotations
 
-CHATML_TEMPLATE = (
-    "<|im_start|>user\n{input}<|im_end|>\n"
-    "<|im_start|>assistant\n{output}<|im_end|>"
-)
+CHATML_TEMPLATE = "<|im_start|>user\n{input}<|im_end|>\n<|im_start|>assistant\n{output}<|im_end|>"
 
-ALPACA_TEMPLATE = (
-    "### Instruction:\n{input}\n\n### Response:\n{output}"
-)
+ALPACA_TEMPLATE = "### Instruction:\n{input}\n\n### Response:\n{output}"
 
 
 def format_row(row: dict, fmt: str = "chatml") -> str:

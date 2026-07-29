@@ -32,9 +32,7 @@ def run(limit_per_source: int | None = None) -> None:
     try:
         from datasets import load_dataset
     except ImportError as exc:
-        raise SystemExit(
-            "The `datasets` package is required. `pip install -e ./training`"
-        ) from exc
+        raise SystemExit("The `datasets` package is required. `pip install -e ./training`") from exc
 
     OUT_PATH.parent.mkdir(parents=True, exist_ok=True)
     written = 0

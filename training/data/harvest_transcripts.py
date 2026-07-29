@@ -58,7 +58,7 @@ def run() -> None:
     written = 0
     seen: set[str] = set()
     with OUT_PATH.open("w", encoding="utf-8") as fh:
-        for i, file in enumerate(sessions):
+        for file in sessions:
             for prompt in extract_user_prompts(file):
                 clean = anonymize(prompt)
                 if clean in seen:

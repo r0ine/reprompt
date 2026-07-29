@@ -1,7 +1,7 @@
 """Augment the gold dataset by generating cross-target variants.
 
 Takes existing gold examples and creates variants for other target profiles.
-This multiplies the dataset roughly 3x without needing new raw examples.
+This expands target coverage without needing new raw requests.
 
 Usage:
     python -m training.data.augment
@@ -16,13 +16,15 @@ from pathlib import Path
 
 from rich.console import Console
 
+from clarify_prompt.prompts.types import TARGET_PROFILES
+
 console = Console()
 
 RAW_DIR = Path("training/datasets/raw")
 GOLD_PATH = RAW_DIR / "gold.jsonl"
 AUGMENTED_PATH = RAW_DIR / "augmented.jsonl"
 
-TARGETS = ["claude-code", "chatgpt", "cursor", "generic"]
+TARGETS = list(TARGET_PROFILES)
 
 CLAUDE_CODE_TEMPLATE = """<task>
 {goal}
@@ -89,8 +91,19 @@ def extract_sections(output: str) -> dict[str, str]:
         if match:
             sections[tag] = match.group(1).strip()
 
-    for heading in ["Goal", "Hedef", "Context", "Bağlam", "Constraints", "Kısıtlar",
-                     "Acceptance", "Kabul", "Output format", "Çıktı formatı", "Steps"]:
+    for heading in [
+        "Goal",
+        "Hedef",
+        "Context",
+        "Bağlam",
+        "Constraints",
+        "Kısıtlar",
+        "Acceptance",
+        "Kabul",
+        "Output format",
+        "Çıktı formatı",
+        "Steps",
+    ]:
         pattern = rf"##\s*{heading}[^\n]*\n(.*?)(?=\n##|\Z)"
         match = re.search(pattern, output, re.DOTALL)
         if match:
@@ -150,7 +163,7 @@ def to_cursor(sections: dict[str, str]) -> str | None:
     if not goal:
         return None
     steps = sections.get("steps", sections.get("constraints", ""))
-    lines = [l.strip() for l in steps.split("\n") if l.strip()]
+    lines = [line.strip() for line in steps.split("\n") if line.strip()]
     if not lines:
         return None
     numbered = []
@@ -184,7 +197,12 @@ def to_generic(sections: dict[str, str]) -> str | None:
 CONVERTERS = {
     "claude-code": to_claude_code,
     "chatgpt": to_chatgpt,
+    "codex": to_generic,
     "cursor": to_cursor,
+    "deepseek": to_chatgpt,
+    "gemini": to_chatgpt,
+    "github-copilot": to_cursor,
+    "grok": to_chatgpt,
     "generic": to_generic,
 }
 
@@ -216,19 +234,21 @@ def run() -> None:
                 continue
 
             new_id = f"{rec['id']}_aug_{target.replace('-', '')}"
-            augmented.append({
-                "id": new_id,
-                "source": "gold",
-                "target": target,
-                "lang": rec["lang"],
-                "input": rec["input"],
-                "output": new_output,
-                "meta": {
-                    "created_at": datetime.now(timezone.utc).isoformat(),
-                    "reviewed_by": None,
-                    "notes": f"augmented from {rec['id']}",
-                },
-            })
+            augmented.append(
+                {
+                    "id": new_id,
+                    "source": "gold",
+                    "target": target,
+                    "lang": rec["lang"],
+                    "input": rec["input"],
+                    "output": new_output,
+                    "meta": {
+                        "created_at": datetime.now(timezone.utc).isoformat(),
+                        "reviewed_by": None,
+                        "notes": f"augmented from {rec['id']}",
+                    },
+                }
+            )
 
     RAW_DIR.mkdir(parents=True, exist_ok=True)
     with AUGMENTED_PATH.open("w", encoding="utf-8") as fh:
@@ -236,7 +256,9 @@ def run() -> None:
             fh.write(json.dumps(rec, ensure_ascii=False) + "\n")
 
     console.print(f"[green]{len(augmented)} augmented ornek yazildi -> {AUGMENTED_PATH}[/green]")
-    console.print(f"  Toplam: {len(records)} gold + {len(augmented)} augmented = {len(records) + len(augmented)}")
+    console.print(
+        f"  Toplam: {len(records)} gold + {len(augmented)} augmented = {len(records) + len(augmented)}"
+    )
 
 
 if __name__ == "__main__":

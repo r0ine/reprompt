@@ -8,11 +8,14 @@ from pathlib import Path
 
 import pytest
 
+from clarify_prompt.prompts.types import TARGET_PROFILES
+
 SYNTHETIC_PATH = Path("training/datasets/raw/synthetic_v2.jsonl")
 TRAIN_PATH = Path("training/datasets/train.jsonl")
 GOLD_PATH = Path("training/datasets/raw/gold.jsonl")
 
-ALL_TARGETS = {"claude-code", "chatgpt", "cursor", "generic"}
+ALL_TARGETS = set(TARGET_PROFILES)
+LEGACY_TARGETS = {"claude-code", "chatgpt", "cursor", "generic"}
 ALL_LANGS = {"tr", "en", "de", "fr", "es", "pt", "ru", "ja", "zh", "ko"}
 
 
@@ -43,9 +46,10 @@ class TestSyntheticBalance:
         langs = {r["lang"] for r in self.records}
         assert langs.issuperset(ALL_LANGS)
 
-    def test_all_4_targets_present(self):
+    def test_registered_targets_present(self):
         targets = {r["target"] for r in self.records}
-        assert targets == ALL_TARGETS
+        assert LEGACY_TARGETS.issubset(targets)
+        assert targets.issubset(ALL_TARGETS)
 
     def test_lang_distribution_not_heavily_skewed(self):
         counts = Counter(r["lang"] for r in self.records)
@@ -65,7 +69,10 @@ class TestSyntheticBalance:
         for r in self.records:
             by_lang.setdefault(r["lang"], set()).add(r["target"])
         for lang, targets in by_lang.items():
-            assert targets == ALL_TARGETS, f"{lang} eksik hedef: {ALL_TARGETS - targets}"
+            assert LEGACY_TARGETS.issubset(targets), (
+                f"{lang} eksik temel hedef: {LEGACY_TARGETS - targets}"
+            )
+            assert targets.issubset(ALL_TARGETS)
 
     def test_no_empty_inputs(self):
         empties = [r for r in self.records if len(r["input"].strip()) < 5]
@@ -112,9 +119,11 @@ class TestOutputFormats:
 
     def test_generic_has_structure(self):
         samples = self._get_by_target("generic")[:500]
-        structured = sum(1 for r in samples
-                         if "##" in r["output"] or "**" in r["output"]
-                         or ":" in r["output"].split("\n")[0])
+        structured = sum(
+            1
+            for r in samples
+            if "##" in r["output"] or "**" in r["output"] or ":" in r["output"].split("\n")[0]
+        )
         assert structured / len(samples) > 0.7
 
 
@@ -159,7 +168,8 @@ class TestTrainSplit:
 
     def test_train_has_all_targets(self):
         targets = {r["target"] for r in self.records}
-        assert targets == ALL_TARGETS
+        assert LEGACY_TARGETS.issubset(targets)
+        assert targets.issubset(ALL_TARGETS)
 
 
 # ── Cross-split ─────────────────────────────────────────────────
@@ -204,25 +214,52 @@ class TestInputDiversity:
         inputs = [r["input"] for r in self.records]
         unique = len(set(inputs))
         dup_rate = 1 - (unique / len(inputs))
-        assert dup_rate < 0.50, f"%{dup_rate*100:.1f} tekrar girdi"
+        assert dup_rate < 0.50, f"%{dup_rate * 100:.1f} tekrar girdi"
 
     def test_input_length_variance(self):
         lengths = [len(r["input"]) for r in self.records]
         avg = sum(lengths) / len(lengths)
-        variance = sum((l - avg) ** 2 for l in lengths) / len(lengths)
-        std = variance ** 0.5
+        variance = sum((length - avg) ** 2 for length in lengths) / len(lengths)
+        std = variance**0.5
         assert std > 3, f"girdi uzunluk std={std:.1f}, cok dusuk"
 
     def test_turkish_uses_turkish_words(self):
         tr = [r for r in self.records if r["lang"] == "tr"][:500]
-        tr_words = {"yap", "ekle", "düzelt", "olustur", "kontrol", "sayfa",
-                    "veritaban", "api", "test", "kur", "ayarla", "sistem", "modul"}
+        tr_words = {
+            "yap",
+            "ekle",
+            "düzelt",
+            "olustur",
+            "kontrol",
+            "sayfa",
+            "veritaban",
+            "api",
+            "test",
+            "kur",
+            "ayarla",
+            "sistem",
+            "modul",
+        }
         matches = sum(1 for r in tr if any(w in r["input"].lower() for w in tr_words))
         assert matches / len(tr) > 0.15
 
     def test_english_uses_english_words(self):
         en = [r for r in self.records if r["lang"] == "en"][:500]
-        en_words = {"fix", "add", "create", "implement", "build", "update", "test",
-                    "set", "configure", "deploy", "api", "system", "module", "debug"}
+        en_words = {
+            "fix",
+            "add",
+            "create",
+            "implement",
+            "build",
+            "update",
+            "test",
+            "set",
+            "configure",
+            "deploy",
+            "api",
+            "system",
+            "module",
+            "debug",
+        }
         matches = sum(1 for r in en if any(w in r["input"].lower() for w in en_words))
         assert matches / len(en) > 0.15

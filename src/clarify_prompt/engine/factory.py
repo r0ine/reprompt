@@ -10,16 +10,19 @@ from clarify_prompt.errors import ConfigError
 
 def make_engine(cfg: Config) -> InferenceBackend:
     backend = cfg.model.backend
+    model_path = cfg.model.path
+    if model_path is None:
+        raise ConfigError("model path is required; set CLARIFY_PROMPT_MODEL_PATH or use --model")
     if backend == "llama":
         return LlamaSubprocessBackend(
-            model_path=cfg.model.path,
+            model_path=model_path,
             cli_binary=cfg.llama.cli_binary,
             n_gpu_layers=cfg.llama.n_gpu_layers,
             ctx_size=cfg.llama.ctx_size,
         )
     if backend == "llama-py":
         return LlamaPyBackend(
-            model_path=cfg.model.path,
+            model_path=model_path,
             n_gpu_layers=cfg.llama.n_gpu_layers,
             ctx_size=cfg.llama.ctx_size,
         )

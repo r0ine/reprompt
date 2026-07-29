@@ -11,27 +11,27 @@ from __future__ import annotations
 
 import json
 import math
-import os
 import time
 from pathlib import Path
 from typing import Any
 
 import click
+import sentencepiece as spm
 import torch
 import torch.nn as nn
-from torch.utils.data import Dataset, DataLoader
-from torch.amp import GradScaler, autocast
-import sentencepiece as spm
 import yaml
 from rich.console import Console
-from rich.progress import Progress, BarColumn, TextColumn, TimeRemainingColumn
+from rich.progress import BarColumn, Progress, TextColumn, TimeRemainingColumn
+from torch.amp import GradScaler, autocast
+from torch.utils.data import DataLoader, Dataset
 
 console = Console()
 
 
 class PromptDataset(Dataset):
-    def __init__(self, jsonl_path: Path, tokenizer: spm.SentencePieceProcessor,
-                 max_len: int = 1024):
+    def __init__(
+        self, jsonl_path: Path, tokenizer: spm.SentencePieceProcessor, max_len: int = 1024
+    ):
         self.tokenizer = tokenizer
         self.max_len = max_len
         self.samples = []
@@ -88,7 +88,7 @@ class PromptDataset(Dataset):
         seq, prompt_len = self.samples[idx]
         input_ids = torch.tensor(seq[:-1], dtype=torch.long)
         labels = torch.tensor(seq[1:], dtype=torch.long)
-        labels[:prompt_len - 1] = -100
+        labels[: prompt_len - 1] = -100
         return {"input_ids": input_ids, "labels": labels}
 
 
@@ -158,30 +158,44 @@ def main(config: str, resume: str | None) -> None:
     console.print(f"  Cihaz: {device}")
 
     if torch.cuda.is_available():
-        mem_gb = torch.cuda.get_device_properties(0).total_memory / (1024 ** 3)
+        mem_gb = torch.cuda.get_device_properties(0).total_memory / (1024**3)
         console.print(f"  GPU: {torch.cuda.get_device_name(0)} ({mem_gb:.1f} GB)")
 
     train_data = PromptDataset(
-        Path("training/datasets/train.jsonl"), tokenizer, model_cfg.max_seq_len,
+        Path("training/datasets/train.jsonl"),
+        tokenizer,
+        model_cfg.max_seq_len,
     )
     val_data = PromptDataset(
-        Path("training/datasets/val.jsonl"), tokenizer, model_cfg.max_seq_len,
+        Path("training/datasets/val.jsonl"),
+        tokenizer,
+        model_cfg.max_seq_len,
     )
 
     console.print(f"  Egitim: {len(train_data):,} ornek | Dogrulama: {len(val_data):,} ornek")
 
     pad_id = tokenizer.PieceToId("<|pad|>")
     train_loader = DataLoader(
-        train_data, batch_size=batch_size, shuffle=True,
-        collate_fn=lambda b: collate_fn(b, pad_id), num_workers=0, pin_memory=True,
+        train_data,
+        batch_size=batch_size,
+        shuffle=True,
+        collate_fn=lambda b: collate_fn(b, pad_id),
+        num_workers=0,
+        pin_memory=True,
     )
     val_loader = DataLoader(
-        val_data, batch_size=batch_size, shuffle=False,
-        collate_fn=lambda b: collate_fn(b, pad_id), num_workers=0,
+        val_data,
+        batch_size=batch_size,
+        shuffle=False,
+        collate_fn=lambda b: collate_fn(b, pad_id),
+        num_workers=0,
     )
 
     optimizer = torch.optim.AdamW(
-        model.parameters(), lr=lr, betas=(0.9, 0.95), weight_decay=0.1,
+        model.parameters(),
+        lr=lr,
+        betas=(0.9, 0.95),
+        weight_decay=0.1,
     )
 
     total_steps = len(train_loader) * epochs // grad_accum
@@ -203,7 +217,9 @@ def main(config: str, resume: str | None) -> None:
         optimizer.load_state_dict(ckpt["optimizer_state"])
         global_step = ckpt["step"]
         start_epoch = ckpt["epoch"]
-        console.print(f"  [cyan]Checkpoint yuklendi: step={global_step}, epoch={start_epoch}[/cyan]")
+        console.print(
+            f"  [cyan]Checkpoint yuklendi: step={global_step}, epoch={start_epoch}[/cyan]"
+        )
 
     train_start = time.time()
     last_hourly_report = train_start
@@ -235,7 +251,9 @@ def main(config: str, resume: str | None) -> None:
                 for pg in optimizer.param_groups:
                     pg["lr"] = current_lr
 
-                with autocast(device_type=device.type, dtype=torch.float16, enabled=device.type == "cuda"):
+                with autocast(
+                    device_type=device.type, dtype=torch.float16, enabled=device.type == "cuda"
+                ):
                     _, loss = model(input_ids, labels)
                     loss = loss / grad_accum
 
@@ -255,24 +273,31 @@ def main(config: str, resume: str | None) -> None:
                     tokens_seen += input_ids.numel()
 
                     if global_step % 100 == 0:
-                        gpu_mem = ""
+                        step_metrics = {
+                            "step": global_step,
+                            "loss": round(raw_loss, 4),
+                            "lr": round(current_lr, 8),
+                            "epoch": epoch,
+                            "elapsed_min": round((time.time() - train_start) / 60, 1),
+                        }
                         if device.type == "cuda":
-                            used = torch.cuda.memory_allocated() / (1024 ** 3)
-                            peak = torch.cuda.max_memory_allocated() / (1024 ** 3)
-                            gpu_mem = f", vram={used:.1f}GB, peak={peak:.1f}GB"
+                            step_metrics["vram_gib"] = round(
+                                torch.cuda.memory_allocated() / (1024**3),
+                                2,
+                            )
+                            step_metrics["peak_vram_gib"] = round(
+                                torch.cuda.max_memory_allocated() / (1024**3),
+                                2,
+                            )
                         with log_file.open("a", encoding="utf-8") as lf:
-                            lf.write(json.dumps({
-                                "step": global_step, "loss": round(raw_loss, 4),
-                                "lr": round(current_lr, 8), "epoch": epoch,
-                                "elapsed_min": round((time.time() - train_start) / 60, 1),
-                            }) + "\n")
+                            lf.write(json.dumps(step_metrics) + "\n")
 
                     if global_step % eval_every == 0:
                         val_loss = evaluate(model, val_loader, device)
                         elapsed_min = (time.time() - train_start) / 60
                         gpu_info = ""
                         if device.type == "cuda":
-                            used = torch.cuda.memory_allocated() / (1024 ** 3)
+                            used = torch.cuda.memory_allocated() / (1024**3)
                             gpu_info = f" vram={used:.1f}GB"
                         console.print(
                             f"\n  [step {global_step}] train_loss={raw_loss:.4f} "
@@ -281,22 +306,37 @@ def main(config: str, resume: str | None) -> None:
                         )
                         if val_loss < best_val_loss:
                             best_val_loss = val_loss
-                            save_checkpoint(model, optimizer, global_step, epoch,
-                                            output_dir / "best.pt")
-                            console.print(f"  [green]En iyi model kaydedildi (val={val_loss:.4f})[/green]")
+                            save_checkpoint(
+                                model, optimizer, global_step, epoch, output_dir / "best.pt"
+                            )
+                            console.print(
+                                f"  [green]En iyi model kaydedildi (val={val_loss:.4f})[/green]"
+                            )
                         model.train()
 
                     if global_step % save_every == 0:
-                        save_checkpoint(model, optimizer, global_step, epoch,
-                                        output_dir / f"step_{global_step}.pt")
+                        save_checkpoint(
+                            model,
+                            optimizer,
+                            global_step,
+                            epoch,
+                            output_dir / f"step_{global_step}.pt",
+                        )
 
                     now = time.time()
                     if now - last_hourly_report >= 3600:
                         hourly_report_num += 1
                         _write_hourly_report(
-                            output_dir, hourly_report_num, global_step, total_steps,
-                            raw_loss, best_val_loss, current_lr,
-                            now - train_start, tokens_seen, device,
+                            output_dir,
+                            hourly_report_num,
+                            global_step,
+                            total_steps,
+                            raw_loss,
+                            best_val_loss,
+                            current_lr,
+                            now - train_start,
+                            tokens_seen,
+                            device,
                         )
                         last_hourly_report = now
 
@@ -307,14 +347,23 @@ def main(config: str, resume: str | None) -> None:
 
     total_time = time.time() - train_start
     save_checkpoint(model, optimizer, global_step, epochs, output_dir / "final.pt")
-    console.print(f"\n[green bold]Egitim tamamlandi! Toplam {global_step:,} adim, "
-                  f"{total_time/60:.1f} dakika.[/green bold]")
+    console.print(
+        f"\n[green bold]Egitim tamamlandi! Toplam {global_step:,} adim, "
+        f"{total_time / 60:.1f} dakika.[/green bold]"
+    )
     console.print(f"  En iyi val loss: {best_val_loss:.4f}")
     console.print(f"  Cikti: {output_dir}")
 
     _write_final_report(
-        output_dir, global_step, total_steps, best_val_loss,
-        total_time, epochs, model.param_count(), config, device,
+        output_dir,
+        global_step,
+        total_steps,
+        best_val_loss,
+        total_time,
+        epochs,
+        model.param_count(),
+        config,
+        device,
     )
 
 
@@ -333,30 +382,41 @@ def evaluate(model: nn.Module, loader: DataLoader, device: torch.device) -> floa
     return total_loss / max(count, 1)
 
 
-def save_checkpoint(model: nn.Module, optimizer: torch.optim.Optimizer,
-                    step: int, epoch: int, path: Path) -> None:
-    torch.save({
-        "model_state": model.state_dict(),
-        "optimizer_state": optimizer.state_dict(),
-        "step": step,
-        "epoch": epoch,
-    }, path)
+def save_checkpoint(
+    model: nn.Module, optimizer: torch.optim.Optimizer, step: int, epoch: int, path: Path
+) -> None:
+    torch.save(
+        {
+            "model_state": model.state_dict(),
+            "optimizer_state": optimizer.state_dict(),
+            "step": step,
+            "epoch": epoch,
+        },
+        path,
+    )
 
 
 def _gpu_stats() -> dict[str, float]:
     if not torch.cuda.is_available():
         return {}
     return {
-        "vram_used_gb": round(torch.cuda.memory_allocated() / (1024 ** 3), 2),
-        "vram_peak_gb": round(torch.cuda.max_memory_allocated() / (1024 ** 3), 2),
-        "vram_total_gb": round(torch.cuda.get_device_properties(0).total_memory / (1024 ** 3), 2),
+        "vram_used_gb": round(torch.cuda.memory_allocated() / (1024**3), 2),
+        "vram_peak_gb": round(torch.cuda.max_memory_allocated() / (1024**3), 2),
+        "vram_total_gb": round(torch.cuda.get_device_properties(0).total_memory / (1024**3), 2),
     }
 
 
 def _write_hourly_report(
-    output_dir: Path, report_num: int, step: int, total_steps: int,
-    last_loss: float, best_val: float, lr: float,
-    elapsed_sec: float, tokens_seen: int, device: torch.device,
+    output_dir: Path,
+    report_num: int,
+    step: int,
+    total_steps: int,
+    last_loss: float,
+    best_val: float,
+    lr: float,
+    elapsed_sec: float,
+    tokens_seen: int,
+    device: torch.device,
 ) -> None:
     progress_pct = step / max(total_steps, 1) * 100
     eta_min = (elapsed_sec / max(step, 1) * (total_steps - step)) / 60
@@ -380,9 +440,15 @@ def _write_hourly_report(
 
 
 def _write_final_report(
-    output_dir: Path, total_steps: int, planned_steps: int,
-    best_val_loss: float, total_time: float, epochs: int,
-    param_count: int, config_path: str, device: torch.device,
+    output_dir: Path,
+    total_steps: int,
+    planned_steps: int,
+    best_val_loss: float,
+    total_time: float,
+    epochs: int,
+    param_count: int,
+    config_path: str,
+    device: torch.device,
 ) -> None:
     steps_per_sec = total_steps / max(total_time, 1)
     log_path = output_dir / "train_log.jsonl"

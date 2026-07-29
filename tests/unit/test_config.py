@@ -6,8 +6,6 @@ burada bagimsiz olarak dogrudan test ediliyor.
 
 from __future__ import annotations
 
-import pytest
-
 
 def auto_hidden_dim(dim: int) -> int:
     raw = int(dim * 8 / 3)
@@ -15,14 +13,42 @@ def auto_hidden_dim(dim: int) -> int:
 
 
 PRESETS = {
-    "SMALL":  {"vocab_size": 12_000, "max_seq_len": 1024, "dim": 512, "n_layers": 8,
-               "n_heads": 8, "n_kv_heads": 4, "dropout": 0.1},
-    "BASE":   {"vocab_size": 12_000, "max_seq_len": 1024, "dim": 768, "n_layers": 12,
-               "n_heads": 12, "n_kv_heads": 4, "dropout": 0.05},
-    "LARGE":  {"vocab_size": 12_000, "max_seq_len": 1024, "dim": 1024, "n_layers": 16,
-               "n_heads": 16, "n_kv_heads": 4, "dropout": 0.05},
-    "XLARGE": {"vocab_size": 12_000, "max_seq_len": 1024, "dim": 1280, "n_layers": 20,
-               "n_heads": 20, "n_kv_heads": 4, "dropout": 0.05},
+    "SMALL": {
+        "vocab_size": 12_000,
+        "max_seq_len": 1024,
+        "dim": 512,
+        "n_layers": 8,
+        "n_heads": 8,
+        "n_kv_heads": 4,
+        "dropout": 0.1,
+    },
+    "BASE": {
+        "vocab_size": 12_000,
+        "max_seq_len": 1024,
+        "dim": 768,
+        "n_layers": 12,
+        "n_heads": 12,
+        "n_kv_heads": 4,
+        "dropout": 0.05,
+    },
+    "LARGE": {
+        "vocab_size": 12_000,
+        "max_seq_len": 1024,
+        "dim": 1024,
+        "n_layers": 16,
+        "n_heads": 16,
+        "n_kv_heads": 4,
+        "dropout": 0.05,
+    },
+    "XLARGE": {
+        "vocab_size": 12_000,
+        "max_seq_len": 1024,
+        "dim": 1280,
+        "n_layers": 20,
+        "n_heads": 20,
+        "n_kv_heads": 4,
+        "dropout": 0.05,
+    },
 }
 
 
@@ -73,11 +99,11 @@ class TestPresets:
         assert b["n_heads"] == 12
 
     def test_large_dimensions(self):
-        l = PRESETS["LARGE"]
-        assert l["dim"] == 1024
-        assert l["n_layers"] == 16
-        assert l["n_heads"] == 16
-        assert l["n_kv_heads"] == 4
+        large_config = PRESETS["LARGE"]
+        assert large_config["dim"] == 1024
+        assert large_config["n_layers"] == 16
+        assert large_config["n_heads"] == 16
+        assert large_config["n_kv_heads"] == 4
 
     def test_kv_heads_divide_n_heads(self):
         for name, cfg in PRESETS.items():
@@ -97,9 +123,17 @@ class TestPresets:
         assert xl["n_kv_heads"] == 4
 
     def test_dim_increases_with_preset_size(self):
-        assert (PRESETS["SMALL"]["dim"] < PRESETS["BASE"]["dim"]
-                < PRESETS["LARGE"]["dim"] < PRESETS["XLARGE"]["dim"])
+        assert (
+            PRESETS["SMALL"]["dim"]
+            < PRESETS["BASE"]["dim"]
+            < PRESETS["LARGE"]["dim"]
+            < PRESETS["XLARGE"]["dim"]
+        )
 
     def test_layers_increase_with_preset_size(self):
-        assert (PRESETS["SMALL"]["n_layers"] < PRESETS["BASE"]["n_layers"]
-                < PRESETS["LARGE"]["n_layers"] < PRESETS["XLARGE"]["n_layers"])
+        assert (
+            PRESETS["SMALL"]["n_layers"]
+            < PRESETS["BASE"]["n_layers"]
+            < PRESETS["LARGE"]["n_layers"]
+            < PRESETS["XLARGE"]["n_layers"]
+        )

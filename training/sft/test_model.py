@@ -8,22 +8,12 @@ from pathlib import Path
 import click
 import torch
 from rich.console import Console
-from rich.table import Table
 from rich.panel import Panel
+from rich.table import Table
+
+from clarify_prompt.prompts.selector import select_system_prompt
 
 console = Console()
-
-SYSTEM_PROMPT = (
-    "You are `clarify-prompt`, a rewriter that turns a raw user request "
-    "into a well-structured prompt for a downstream large language model.\n\n"
-    "Rules:\n"
-    "- Preserve the user's intent exactly. Do not add features or scope.\n"
-    "- Add missing structure: a clear goal, the context the target LLM needs, "
-    "acceptance criteria, and the expected output format.\n"
-    "- Do NOT answer the request yourself. Return the rewritten prompt, not the solution.\n"
-    "- Reply in the same language as the input.\n"
-    "- Format the rewritten prompt as a self-contained block."
-)
 
 TEST_PROMPTS = [
     {"input": "bu kodu düzelt çalışmıyor", "lang": "tr"},
@@ -37,7 +27,7 @@ TEST_PROMPTS = [
 
 def generate(model, tokenizer, user_input: str, max_new_tokens: int = 512) -> str:
     messages = [
-        {"role": "system", "content": SYSTEM_PROMPT},
+        {"role": "system", "content": select_system_prompt("generic")},
         {"role": "user", "content": user_input},
     ]
     prompt = tokenizer.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
@@ -56,17 +46,27 @@ def generate(model, tokenizer, user_input: str, max_new_tokens: int = 512) -> st
 
 
 @click.command()
-@click.option("--adapter", "-a", type=click.Path(exists=True, path_type=Path), required=True,
-              help="LoRA adapter dizini (training/outputs/.../final)")
-@click.option("--base-model", "-b", type=str, default=None,
-              help="Base model ismi (adapter config'den okunur)")
-@click.option("--test-file", "-t", type=click.Path(exists=True, path_type=Path), default=None,
-              help="JSONL test dosyasi (varsayilan: dahili test promptlari)")
-@click.option("--compare/--no-compare", default=True,
-              help="Baseline ile karsilastir")
+@click.option(
+    "--adapter",
+    "-a",
+    type=click.Path(exists=True, path_type=Path),
+    required=True,
+    help="LoRA adapter dizini (training/outputs/.../final)",
+)
+@click.option(
+    "--base-model", "-b", type=str, default=None, help="Base model ismi (adapter config'den okunur)"
+)
+@click.option(
+    "--test-file",
+    "-t",
+    type=click.Path(exists=True, path_type=Path),
+    default=None,
+    help="JSONL test dosyasi (varsayilan: dahili test promptlari)",
+)
+@click.option("--compare/--no-compare", default=True, help="Baseline ile karsilastir")
 def main(adapter: Path, base_model: str | None, test_file: Path | None, compare: bool) -> None:
-    from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig
     from peft import PeftModel
+    from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig
 
     adapter_config = json.loads((adapter / "adapter_config.json").read_text())
     if base_model is None:
@@ -108,7 +108,9 @@ def main(adapter: Path, base_model: str | None, test_file: Path | None, compare:
         for p in prompts:
             out = generate(base, tokenizer, p["input"])
             baseline_outputs.append(out)
-            console.print(Panel(out[:300], title=f"Baseline | {p['input'][:40]}...", border_style="dim"))
+            console.print(
+                Panel(out[:300], title=f"Baseline | {p['input'][:40]}...", border_style="dim")
+            )
 
     console.print("\nLoRA adapter yukleniyor...")
     model = PeftModel.from_pretrained(base, str(adapter))
@@ -119,7 +121,9 @@ def main(adapter: Path, base_model: str | None, test_file: Path | None, compare:
     for p in prompts:
         out = generate(model, tokenizer, p["input"])
         finetuned_outputs.append(out)
-        console.print(Panel(out[:500], title=f"Fine-tuned | {p['input'][:40]}...", border_style="green"))
+        console.print(
+            Panel(out[:500], title=f"Fine-tuned | {p['input'][:40]}...", border_style="green")
+        )
 
     if compare:
         table = Table(title="Karsilastirma Ozeti")
@@ -128,7 +132,17 @@ def main(adapter: Path, base_model: str | None, test_file: Path | None, compare:
         table.add_column("Fine-tuned uzunluk", justify="right")
         table.add_column("Yapi var?", justify="center")
 
-        structure_markers = ["##", "<task>", "Goal", "Hedef", "Context", "Acceptance", "Constraints", "1.", "2."]
+        structure_markers = [
+            "##",
+            "<task>",
+            "Goal",
+            "Hedef",
+            "Context",
+            "Acceptance",
+            "Constraints",
+            "1.",
+            "2.",
+        ]
         for i, p in enumerate(prompts):
             bl = baseline_outputs[i]
             ft = finetuned_outputs[i]

@@ -11,10 +11,18 @@ spm = pytest.importorskip("sentencepiece", reason="sentencepiece kurulu degil")
 TOK_PATH = Path("training/tokenizer/clarify_tok.model")
 
 SPECIAL_TOKENS = [
-    "<|pad|>", "<|bos|>", "<|eos|>",
-    "<|im_start|>", "<|im_end|>",
-    "<|claude-code|>", "<|chatgpt|>", "<|cursor|>", "<|generic|>",
-    "<|system|>", "<|user|>", "<|assistant|>",
+    "<|pad|>",
+    "<|bos|>",
+    "<|eos|>",
+    "<|im_start|>",
+    "<|im_end|>",
+    "<|claude-code|>",
+    "<|chatgpt|>",
+    "<|cursor|>",
+    "<|generic|>",
+    "<|system|>",
+    "<|user|>",
+    "<|assistant|>",
 ]
 
 

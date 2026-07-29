@@ -8,6 +8,8 @@ import click
 import yaml
 from rich.console import Console
 
+from clarify_prompt.prompts.selector import select_system_prompt
+
 console = Console()
 
 
@@ -20,9 +22,9 @@ def main(config: Path) -> None:
 
 
 def _train(cfg: dict) -> None:
-    from unsloth import FastLanguageModel  # imported lazily; heavy
-    from trl import SFTConfig, SFTTrainer
     from datasets import load_dataset
+    from trl import SFTConfig, SFTTrainer
+    from unsloth import FastLanguageModel  # imported lazily; heavy
 
     model, tokenizer = FastLanguageModel.from_pretrained(
         model_name=cfg["base_model"],
@@ -46,8 +48,14 @@ def _train(cfg: dict) -> None:
     val_ds = load_dataset("json", data_files=cfg["data"]["val"], split="train")
 
     def format_chatml(example: dict) -> dict:
+        system_prompt = select_system_prompt(
+            example.get("target", "generic"),
+            task=example.get("task", "auto"),
+            detail=example.get("detail", "balanced"),
+        )
         chat = tokenizer.apply_chat_template(
             [
+                {"role": "system", "content": system_prompt},
                 {"role": "user", "content": example["input"]},
                 {"role": "assistant", "content": example["output"]},
             ],

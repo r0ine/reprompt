@@ -1,44 +1,107 @@
-# Yeni target profili ekleme
+# Profil kataloğu
 
-`clarify-prompt`, hedef LLM'in "diline" göre farklı prompt yapıları üretir. Yeni
-bir hedef eklemek üç adımlık iş.
+Prompt derleyicisi üç bağımsız seçim kullanır:
 
-## 1. Yeni profil dosyası
+- hedef araç, çıktının biçimini ve araç yeteneklerine ilişkin varsayımları belirler;
+- görev profili, hangi kararların ve kabul ölçütlerinin önemli olduğunu belirler;
+- ayrıntı seviyesi, aynı kapsamın ne kadar derin tarif edileceğini belirler.
 
-`src/clarify_prompt/prompts/targets/<name>.md` oluştur. Örnek: `windsurf.md`.
+Kaynak sabitleri
+`src/clarify_prompt/prompts/types.py` dosyasında, metin profilleri ise
+`src/clarify_prompt/prompts/` altında tutulur.
 
-Dosyanın içeriği hedef LLM'e verilecek "ek sistem promptu" — genel `system.md`'nin
-üstüne eklenir. Beklenen bölümler:
+## Hedef araçlar
 
-- Bir başlık: `## Target profile: <name>`
-- 4-8 madde: bu hedefin conventions'ı (XML/markdown, dosya-odaklı vs. bağlam-odaklı, kısa direktifler vs. uzun anlatım).
-- Son madde: `Do not answer the user's request. Only rewrite it into the <name>-optimized structure above.`
+| Profil | Kullanım |
+|---|---|
+| `chatgpt` | Markdown tabanlı genel sohbet, araştırma ve üretim görevleri |
+| `claude-code` | Depo içinde çalışan Claude Code ajanı |
+| `codex` | Depo talimatları, dosya değişiklikleri ve doğrulama odaklı Codex işleri |
+| `cursor` | Açık dosya veya seçili kod bağlamındaki kısa IDE değişiklikleri |
+| `deepseek` | Teknik çözüm, algoritma ve uygulanabilir kod tarifleri |
+| `gemini` | Büyük bağlam, dosya, görsel ve kaynak temelli görevler |
+| `github-copilot` | Copilot Chat içinde depo ve seçili sembol odaklı değişiklikler |
+| `grok` | Güncel web veya sosyal bağlam gerektirebilen işler |
+| `generic` | Belirli bir araca bağlı olmayan taşınabilir prompt |
 
-## 2. Enum'a ekle
+Hedef profili, aracın sahip olmadığı bir yeteneği varmış gibi göstermemelidir. Örneğin
+girdi tarama veya dosya erişiminden söz etmiyorsa `generic` profil bunları varsaymaz.
 
-`src/clarify_prompt/config/schema.py` içinde `Config.target`'ın `Literal` listesine
-yeni ismi ekle.
+## Görev profilleri
 
-`src/clarify_prompt/cli/main.py` içindeki `TARGET_CHOICES` listesine ekle.
+| Profil | Ana vurgu |
+|---|---|
+| `auto` | İstenen sonuca göre uygun görev kurallarını sessizce seçer |
+| `architecture` | Seçenekler, trade-off, bileşen sınırları, veri akışı ve işletim |
+| `coding` | Mevcut kodu inceleme, tam uygulama, uyumluluk ve test |
+| `creative` | Sanat yönü, kompozisyon, stil özellikleri ve kullanılabilir çıktı |
+| `data` | Şema, dönüşüm, veri kalitesi, lineage ve tekrarlanabilirlik |
+| `debugging` | Reprodüksiyon, kanıt, kök neden, düzeltme ve regresyon |
+| `operations` | Hazırlık, güvenli uygulama, doğrulama, rollback ve izleme |
+| `planning` | Milestone, bağımlılık, kritik yol, risk ve çıkış ölçütleri |
+| `research` | Kaynak kalitesi, güncellik, alıntı ve belirsizlik |
+| `review` | Kanıta bağlı bulgu, önem seviyesi ve salt-okunur inceleme sınırı |
+| `writing` | Hedef kitle, amaç, ton, uzunluk, doğruluk ve yayın biçimi |
 
-## 3. Test
+`auto`, bir isteği yalnızca geçen kelimelere göre sınıflandırmaz. “Bu kodu açıkla” talebi
+bir kod düzenleme yetkisi değildir; “uygulama planı çıkar” talebi de uygulamayı başlatmaz.
 
-`tests/unit/test_selector.py` içindeki `@pytest.mark.parametrize` listesine yeni
-target'ı ekle. `pytest tests/unit -v` yeşile dönmeli.
+## Ayrıntı seviyeleri
 
-## 4. Test seti karşılığı
+### `compact`
 
-Yeni target'a özel 20-30 gold örnek `docs/gold_examples.md`'ye ekle. Bunlar test
-setine dahil edildikten sonra değerlendirme raporunda ayrı bir kolon olarak görülür.
+Kısa işler ve düşük gecikme için kullanılır. Ana hedef, zorunlu sınırlar, çıktı biçimi ve
+en fazla birkaç kabul ölçütü bırakılır.
 
-## Var olan profiller
+### `balanced`
 
-- `claude-code` — XML tag, dosya yolu, mvn/pytest kabul kriterleri, hipotez > soru.
-- `chatgpt` — markdown başlıklar, persona, dil+versiyon, numaralı acceptance.
-- `cursor` — kısa direktifler, IDE-relative, "do not" listesi.
-- `generic` — vendor-neutral, portable, sade başlıklar.
+Varsayılan profildir. İlk denemede uygulanabilir olacak kadar bağlam verir, fakat nadir
+kenar durumlarını ve genel tavsiyeleri prompta doldurmaz.
 
-## Ne zaman yeni target?
+### `deep`
 
-Sadece **hedef LLM'in prompt kalıpları belirgin şekilde farklıysa**. "Aynı ama farklı
-marka" bir hedef için jenerik profili kullan; conflate etme.
+Çok dosyalı veya uzmanlık gerektiren işlerde hata yolları, uyumluluk, veri davranışı,
+kararlar ve tamamlanma kanıtını daha açık tarif eder.
+
+### `exhaustive`
+
+Karmaşık ve maliyetli işlerde ilgili iş akışlarını, bağımlılıkları, failure path'leri,
+güvenliği, migration ve rollback'i kapsar. Her konu her prompta eklenmez. Bu profil token
+kotası doldurmaz; yalnızca verilen iş açısından karar değiştiren konuları dahil eder.
+
+## Yeni hedef ekleme
+
+1. `src/clarify_prompt/prompts/targets/<ad>.md` dosyasını ekle.
+2. Dosyayı `TargetProfile` ve `TARGET_PROFILES` içine ekle.
+3. Hedefin gerçekten farklı davranışını yaz; yalnızca marka adını değiştiren profil ekleme.
+4. `tests/unit/test_selector.py` parametrik testlerinin yeni dosyayı yüklediğini doğrula.
+5. CLI, config ve API testlerinde profil kataloğunun güncel kaldığını kontrol et.
+6. Eğitim setine hedefe özgü, insan tarafından gözden geçirilmiş örnekler ekle.
+
+Profil başlığı makine adıyla birebir aynı olmalıdır:
+
+```markdown
+## Target profile: windsurf
+```
+
+Son satır, modelin işi cevaplamamasını tekrar sabitler:
+
+```text
+Only rewrite the request. Do not perform it.
+```
+
+## Yeni görev veya ayrıntı profili ekleme
+
+Görev profilleri `prompts/tasks/`, ayrıntı profilleri `prompts/depths/` altında aynı
+düzenle eklenir. Tür sabitleri, config doğrulaması, CLI seçimi, API şeması ve eğitim
+derleyicisi tek kaynaktan beslendiği için `types.py` güncellemesi bütün yüzeylere yansır.
+
+Yeni profil için şu sorular cevaplanmalıdır:
+
+- Bu profil hangi kararı daha iyi hâle getiriyor?
+- `auto` veya var olan bir profil neden yeterli değil?
+- Hangi gereksiz kapsam genişlemelerini engelliyor?
+- Hangi gözlenebilir kabul ölçütlerini ekliyor?
+- Hangi örneklerde kullanılmamalı?
+
+Bu sorulara somut cevap yoksa yeni profil yerine mevcut profil geliştirilmelidir.

@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import json
-from collections import Counter
 from pathlib import Path
 
 import click
@@ -52,8 +51,12 @@ def run(tokenizer: str = "unsloth/Qwen2.5-7B-Instruct-bnb-4bit") -> None:
         table.add_row(
             path.name,
             str(len(rows)),
-            str(p50(in_lens)), str(p95(in_lens)), str(in_lens[-1]),
-            str(p50(out_lens)), str(p95(out_lens)), str(out_lens[-1]),
+            str(p50(in_lens)),
+            str(p95(in_lens)),
+            str(in_lens[-1]),
+            str(p50(out_lens)),
+            str(p95(out_lens)),
+            str(out_lens[-1]),
         )
 
     console.print(table)

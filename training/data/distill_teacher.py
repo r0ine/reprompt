@@ -11,6 +11,7 @@ import click
 from rich.console import Console
 from tenacity import retry, stop_after_attempt, wait_exponential
 
+from clarify_prompt.prompts.selector import select_system_prompt
 from training.data.schema import Record, RecordMeta
 
 console = Console()
@@ -25,13 +26,6 @@ TEACHER_MODEL_DEFAULT = "claude-opus-4-7"
 COST_PER_1K_OUTPUT_USD = 0.075  # rough — verify before running
 
 
-SYSTEM_PROMPT = """You are a prompt engineer. Given a raw user request, rewrite it into an
-optimized prompt for a downstream LLM. Preserve the user's intent exactly. Add missing
-structure: goal, context, acceptance criteria, output format. Reply in the same language
-as the input. Return ONLY the rewritten prompt — no preamble, no explanation.
-"""
-
-
 @click.command()
 @click.option("--limit", type=int, default=None, help="Stop after N records (dry-run friendly)")
 @click.option("--dry-run", is_flag=True, help="Estimate cost, no API calls")
@@ -40,7 +34,9 @@ def cli(limit: int | None, dry_run: bool, teacher: str) -> None:
     run(limit=limit, dry_run=dry_run, teacher=teacher)
 
 
-def run(limit: int | None = None, dry_run: bool = False, teacher: str = TEACHER_MODEL_DEFAULT) -> None:
+def run(
+    limit: int | None = None, dry_run: bool = False, teacher: str = TEACHER_MODEL_DEFAULT
+) -> None:
     inputs = list(_load_pending())
     if limit is not None:
         inputs = inputs[:limit]
@@ -69,14 +65,26 @@ def run(limit: int | None = None, dry_run: bool = False, teacher: str = TEACHER_
     with OUT_PATH.open("w", encoding="utf-8") as fh:
         for i, raw_rec in enumerate(inputs, 1):
             try:
-                optimized = _distill_one(client, teacher, raw_rec["input"])
+                target = raw_rec.get("target", "generic")
+                task = raw_rec.get("task", "auto")
+                detail = raw_rec.get("detail", "balanced")
+                optimized = _distill_one(
+                    client,
+                    teacher,
+                    raw_rec["input"],
+                    target=target,
+                    task=task,
+                    detail=detail,
+                )
             except Exception as exc:  # noqa: BLE001
                 console.print(f"[red]#{i} fail: {exc}[/red]")
                 continue
             new_rec = Record(
                 id=f"distill_{written:05d}",
                 source="distill",
-                target=raw_rec.get("target", "generic"),
+                target=target,
+                task=task,
+                detail=detail,
                 lang=raw_rec.get("lang", "en"),
                 input=raw_rec["input"],
                 output=optimized,
@@ -107,11 +115,18 @@ def _load_pending():
 
 
 @retry(stop=stop_after_attempt(3), wait=wait_exponential(min=2, max=30))
-def _distill_one(client, teacher: str, user_input: str) -> str:
+def _distill_one(
+    client,
+    teacher: str,
+    user_input: str,
+    target: str = "generic",
+    task: str = "auto",
+    detail: str = "balanced",
+) -> str:
     resp = client.messages.create(
         model=teacher,
-        max_tokens=1024,
-        system=SYSTEM_PROMPT,
+        max_tokens=2048,
+        system=select_system_prompt(target, task=task, detail=detail),
         messages=[{"role": "user", "content": user_input}],
     )
     return "".join(block.text for block in resp.content if hasattr(block, "text")).strip()

@@ -11,14 +11,23 @@ from __future__ import annotations
 import os
 import time
 from contextlib import asynccontextmanager
-from typing import Literal
+from typing import cast
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
 from clarify_prompt import __version__
-from clarify_prompt.sdk import ClarifyEngine, TargetProfile
+from clarify_prompt.config.schema import BackendName
+from clarify_prompt.prompts.types import (
+    DETAIL_LEVELS,
+    TARGET_PROFILES,
+    TASK_PROFILES,
+    DetailLevel,
+    TargetProfile,
+    TaskProfile,
+)
+from clarify_prompt.sdk import ClarifyEngine
 
 _engine: ClarifyEngine | None = None
 
@@ -27,12 +36,17 @@ def _get_engine() -> ClarifyEngine:
     global _engine
     if _engine is None:
         model_path = os.environ.get("CLARIFY_PROMPT_MODEL_PATH")
-        backend = os.environ.get("CLARIFY_PROMPT_BACKEND", "llama")
+        backend_value = os.environ.get("CLARIFY_PROMPT_BACKEND", "llama")
+        if backend_value not in ("llama", "llama-py"):
+            raise RuntimeError(f"unsupported inference backend: {backend_value}")
+        backend = cast(BackendName, backend_value)
         gpu_layers = int(os.environ.get("CLARIFY_PROMPT_GPU_LAYERS", "33"))
-        ctx = int(os.environ.get("CLARIFY_PROMPT_CTX_SIZE", "4096"))
+        ctx = int(os.environ.get("CLARIFY_PROMPT_CTX_SIZE", "8192"))
         _engine = ClarifyEngine(
-            model=model_path, backend=backend,
-            n_gpu_layers=gpu_layers, ctx_size=ctx,
+            model=model_path,
+            backend=backend,
+            n_gpu_layers=gpu_layers,
+            ctx_size=ctx,
         )
     return _engine
 
@@ -61,6 +75,8 @@ app.add_middleware(
 class RewriteRequest(BaseModel):
     prompt: str = Field(..., min_length=1, max_length=10_000)
     target: TargetProfile = "generic"
+    task: TaskProfile = "auto"
+    detail: DetailLevel = "balanced"
     explain: bool = False
     temperature: float | None = Field(default=None, ge=0.0, le=2.0)
     max_tokens: int | None = Field(default=None, ge=1, le=4096)
@@ -69,6 +85,8 @@ class RewriteRequest(BaseModel):
 class RewriteResponse(BaseModel):
     rewritten_prompt: str
     target: str
+    task: str
+    detail: str
     model: str | None
     elapsed_ms: int
 
@@ -76,6 +94,8 @@ class RewriteResponse(BaseModel):
 class BatchRequest(BaseModel):
     prompts: list[str] = Field(..., min_length=1, max_length=50)
     target: TargetProfile = "generic"
+    task: TaskProfile = "auto"
+    detail: DetailLevel = "balanced"
 
 
 class BatchResponse(BaseModel):
@@ -100,7 +120,16 @@ def health():
 
 @app.get("/v1/targets")
 def list_targets():
-    return {"targets": ["claude-code", "chatgpt", "cursor", "generic"]}
+    return {"targets": list(TARGET_PROFILES)}
+
+
+@app.get("/v1/profiles")
+def list_profiles():
+    return {
+        "targets": list(TARGET_PROFILES),
+        "tasks": list(TASK_PROFILES),
+        "detail_levels": list(DETAIL_LEVELS),
+    }
 
 
 @app.post("/v1/rewrite", response_model=RewriteResponse)
@@ -112,6 +141,8 @@ def rewrite(req: RewriteRequest):
             prompt=req.prompt,
             target=req.target,
             explain=req.explain,
+            task=req.task,
+            detail=req.detail,
             temperature=req.temperature,
             max_tokens=req.max_tokens,
         )
@@ -121,6 +152,8 @@ def rewrite(req: RewriteRequest):
     return RewriteResponse(
         rewritten_prompt=result.text,
         target=result.target,
+        task=result.task,
+        detail=result.detail,
         model=result.model_path,
         elapsed_ms=elapsed,
     )
@@ -134,14 +167,25 @@ def batch_rewrite(req: BatchRequest):
     for prompt_text in req.prompts:
         step_t0 = time.perf_counter()
         try:
-            r = engine.rewrite(prompt=prompt_text, target=req.target)
+            rewrite_result = engine.rewrite(
+                prompt=prompt_text,
+                target=req.target,
+                task=req.task,
+                detail=req.detail,
+            )
         except Exception as exc:
             raise HTTPException(status_code=500, detail=str(exc)) from exc
         step_ms = int((time.perf_counter() - step_t0) * 1000)
-        results.append(RewriteResponse(
-            rewritten_prompt=r.text, target=r.target,
-            model=r.model_path, elapsed_ms=step_ms,
-        ))
+        results.append(
+            RewriteResponse(
+                rewritten_prompt=rewrite_result.text,
+                target=rewrite_result.target,
+                task=rewrite_result.task,
+                detail=rewrite_result.detail,
+                model=rewrite_result.model_path,
+                elapsed_ms=step_ms,
+            )
+        )
     total = int((time.perf_counter() - t0) * 1000)
     return BatchResponse(results=results, total_elapsed_ms=total)
 
@@ -175,11 +219,13 @@ def openai_compat(body: dict):
     return {
         "id": "clarify-0",
         "object": "chat.completion",
-        "choices": [{
-            "index": 0,
-            "message": {"role": "assistant", "content": result.text},
-            "finish_reason": "stop",
-        }],
+        "choices": [
+            {
+                "index": 0,
+                "message": {"role": "assistant", "content": result.text},
+                "finish_reason": "stop",
+            }
+        ],
         "model": "clarify-prompt",
         "usage": {"prompt_tokens": 0, "completion_tokens": 0, "total_tokens": 0},
     }

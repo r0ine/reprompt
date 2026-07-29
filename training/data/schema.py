@@ -7,8 +7,9 @@ from typing import Literal
 
 from pydantic import BaseModel, Field
 
+from clarify_prompt.prompts.types import DetailLevel, TargetProfile, TaskProfile
+
 Source = Literal["gold", "transcript", "shared", "distill"]
-Target = Literal["claude-code", "chatgpt", "cursor", "generic"]
 Lang = Literal["tr", "en", "mix"]
 
 
@@ -22,7 +23,9 @@ class RecordMeta(BaseModel):
 class Record(BaseModel):
     id: str
     source: Source
-    target: Target
+    target: TargetProfile
+    task: TaskProfile = "auto"
+    detail: DetailLevel = "balanced"
     lang: Lang
     input: str = Field(min_length=20, max_length=2000)
     output: str = Field(min_length=50, max_length=4000)

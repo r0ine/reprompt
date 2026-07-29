@@ -7,7 +7,6 @@ RoPE pozisyon kodlamasi, Grouped-Query Attention, SwiGLU FFN.
 from __future__ import annotations
 
 import math
-from typing import Optional
 
 import torch
 import torch.nn as nn
@@ -27,7 +26,7 @@ def precompute_rope(dim: int, max_seq_len: int, theta: float = 10_000.0) -> torc
 def apply_rope(x: torch.Tensor, rope: torch.Tensor) -> torch.Tensor:
     # x: (bs, seq, n_heads, head_dim)
     x_ = torch.view_as_complex(x.float().reshape(*x.shape[:-1], -1, 2))
-    rope = rope[:x_.shape[1]].unsqueeze(0).unsqueeze(2)
+    rope = rope[: x_.shape[1]].unsqueeze(0).unsqueeze(2)
     return torch.view_as_real(x_ * rope).flatten(-2).type_as(x)
 
 
@@ -67,8 +66,9 @@ class Attention(nn.Module):
         self.wo = nn.Linear(cfg.n_heads * cfg.head_dim, cfg.dim, bias=False)
         self.dropout = nn.Dropout(cfg.dropout)
 
-    def forward(self, x: torch.Tensor, rope: torch.Tensor,
-                mask: Optional[torch.Tensor] = None) -> torch.Tensor:
+    def forward(
+        self, x: torch.Tensor, rope: torch.Tensor, mask: torch.Tensor | None = None
+    ) -> torch.Tensor:
         bs, seq_len, _ = x.shape
 
         q = self.wq(x).view(bs, seq_len, self.n_heads, self.head_dim)
@@ -119,8 +119,9 @@ class TransformerBlock(nn.Module):
         self.ffn_norm = RMSNorm(cfg.dim, cfg.norm_eps)
         self.ffn = FeedForward(cfg)
 
-    def forward(self, x: torch.Tensor, rope: torch.Tensor,
-                mask: Optional[torch.Tensor] = None) -> torch.Tensor:
+    def forward(
+        self, x: torch.Tensor, rope: torch.Tensor, mask: torch.Tensor | None = None
+    ) -> torch.Tensor:
         x = x + self.attn(self.attn_norm(x), rope, mask)
         x = x + self.ffn(self.ffn_norm(x))
         return x
@@ -155,8 +156,9 @@ class ClarifyGPT(nn.Module):
         elif isinstance(module, nn.Embedding):
             nn.init.normal_(module.weight, mean=0.0, std=0.02)
 
-    def forward(self, tokens: torch.Tensor,
-                targets: Optional[torch.Tensor] = None) -> tuple[torch.Tensor, Optional[torch.Tensor]]:
+    def forward(
+        self, tokens: torch.Tensor, targets: torch.Tensor | None = None
+    ) -> tuple[torch.Tensor, torch.Tensor | None]:
         bs, seq_len = tokens.shape
         x = self.tok_emb(tokens)
 
@@ -187,11 +189,16 @@ class ClarifyGPT(nn.Module):
         return sum(p.numel() for p in self.parameters() if p.requires_grad)
 
     @torch.inference_mode()
-    def generate(self, prompt_tokens: torch.Tensor, max_new: int = 512,
-                 temperature: float = 0.7, top_k: int = 50) -> torch.Tensor:
+    def generate(
+        self,
+        prompt_tokens: torch.Tensor,
+        max_new: int = 512,
+        temperature: float = 0.7,
+        top_k: int = 50,
+    ) -> torch.Tensor:
         tokens = prompt_tokens
         for _ in range(max_new):
-            ctx = tokens[:, -self.cfg.max_seq_len:]
+            ctx = tokens[:, -self.cfg.max_seq_len :]
             logits, _ = self(ctx)
             logits = logits[:, -1, :] / max(temperature, 1e-5)
 

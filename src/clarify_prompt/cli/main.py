@@ -13,8 +13,11 @@ from clarify_prompt.engine.factory import make_engine
 from clarify_prompt.errors import ClarifyPromptError
 from clarify_prompt.postproc.pipeline import postprocess
 from clarify_prompt.prompts.selector import select_system_prompt
+from clarify_prompt.prompts.types import DETAIL_LEVELS, TARGET_PROFILES, TASK_PROFILES
 
-TARGET_CHOICES = ["claude-code", "chatgpt", "cursor", "generic"]
+TARGET_CHOICES = list(TARGET_PROFILES)
+TASK_CHOICES = list(TASK_PROFILES)
+DETAIL_CHOICES = list(DETAIL_LEVELS)
 
 
 class _DefaultGroup(click.Group):
@@ -42,23 +45,44 @@ def app():
 
 @app.command()
 @click.argument("user_prompt", required=False)
-@click.option("--target", "-t", type=click.Choice(TARGET_CHOICES), default=None,
-              help="Target LLM profile.")
-@click.option("--model", "-m", type=click.Path(exists=False), default=None,
-              help="Path to GGUF model file.")
+@click.option(
+    "--target", "-t", type=click.Choice(TARGET_CHOICES), default=None, help="Target LLM profile."
+)
+@click.option(
+    "--task",
+    type=click.Choice(TASK_CHOICES),
+    default=None,
+    help="Task profile; auto infers it from the request.",
+)
+@click.option(
+    "--detail", "-d", type=click.Choice(DETAIL_CHOICES), default=None, help="Prompt detail level."
+)
+@click.option(
+    "--model", "-m", type=click.Path(exists=False), default=None, help="Path to GGUF model file."
+)
 @click.option("--explain", is_flag=True, help="Also output a short 'why' explanation.")
 @click.option("--json", "as_json", is_flag=True, help="JSON-formatted output.")
 @click.option("--stdin", is_flag=True, help="Read prompt from stdin.")
-def rewrite(user_prompt, target, model, explain, as_json, stdin):
+def rewrite(user_prompt, target, task, detail, model, explain, as_json, stdin):
     """Rewrite a raw user prompt into an optimized prompt."""
     err_console = Console(stderr=True)
     try:
-        cfg = load_config(target_override=target, model_override=model)
+        cfg = load_config(
+            target_override=target,
+            model_override=model,
+            task_override=task,
+            detail_override=detail,
+        )
         if stdin or user_prompt is None:
             user_prompt = sys.stdin.read()
         if not (user_prompt or "").strip():
             raise click.UsageError("empty prompt (nothing to rewrite)")
-        sys_prompt = select_system_prompt(cfg.target, explain=explain)
+        sys_prompt = select_system_prompt(
+            cfg.target,
+            explain=explain,
+            task=cfg.task,
+            detail=cfg.detail,
+        )
         engine = make_engine(cfg)
         raw = engine.generate(sys_prompt, user_prompt)
         result = postprocess(raw, as_json=as_json)
@@ -76,8 +100,9 @@ def rewrite(user_prompt, target, model, explain, as_json, stdin):
 @app.command()
 @click.option("--host", default="0.0.0.0", help="Bind address.")
 @click.option("--port", "-p", default=8741, type=int, help="Port number.")
-@click.option("--model", "-m", type=click.Path(exists=False), default=None,
-              help="Path to GGUF model file.")
+@click.option(
+    "--model", "-m", type=click.Path(exists=False), default=None, help="Path to GGUF model file."
+)
 @click.option("--workers", "-w", default=1, type=int, help="Uvicorn worker count.")
 @click.option("--reload", is_flag=True, help="Auto-reload on code changes (dev only).")
 def serve(host, port, model, workers, reload):
@@ -89,6 +114,7 @@ def serve(host, port, model, workers, reload):
       clarify-prompt serve --port 9000 --model ~/models/clarify.gguf
     """
     import os
+
     if model:
         os.environ["CLARIFY_PROMPT_MODEL_PATH"] = str(model)
 
@@ -101,8 +127,10 @@ def serve(host, port, model, workers, reload):
     click.echo(f"clarify-prompt v{__version__} — starting API on {host}:{port}")
     uvicorn.run(
         "clarify_prompt.api.server:app",
-        host=host, port=port,
-        workers=workers, reload=reload,
+        host=host,
+        port=port,
+        workers=workers,
+        reload=reload,
     )
 
 

@@ -7,8 +7,8 @@
 
 - **Ad:** `clarify-prompt-qwen2.5-7b-v1` (planlanan)
 - **Base:** [Qwen2.5-7B-Instruct](https://huggingface.co/Qwen/Qwen2.5-7B-Instruct)
-- **Yöntem:** LoRA r=16 (QLoRA / 4-bit NF4), Unsloth framework
-- **Boyut:** LoRA adapter ~200 MB; GGUF Q4_K_M ~4.4 GB
+- **Yöntem:** rank 32 rsLoRA (QLoRA / 4-bit NF4), Unsloth framework
+- **Boyut:** Adapter boyutu eğitim ayarına bağlı; GGUF Q4_K_M yaklaşık 4–5 GiB
 - **Diller:** Türkçe, İngilizce (birincil); diğerleri denenmedi
 - **Bağlam uzunluğu:** 4096 (varsayılan config)
 - **Lisans:** Apache 2.0 (base modelin lisansına uyum)
@@ -43,7 +43,8 @@ cevaplama, kod üretme, güvenlik filtresi değildir — sadece prompt yeniden y
 - **PII (kişisel bilgi) taraması yapmaz.** Şifre, e-posta içeriği, kimlik bilgisi vb. modeli verilen ham istekte yazıldıysa modele gider.
 - **Kısa istekler** (< 20 karakter) düşük kalitede yeniden yazılır — model az bilgi ile uydurma yapabilir.
 - **Türkçe ve İngilizce** eğitildi. Diğer dillerde beklentiler düşük tutulmalı.
-- Target profilleri (`claude-code`, `chatgpt`, `cursor`, `generic`) heuristik. Hedef LLM'in sürümü değişince prompt tercihleri kayabilir.
+- Dokuz hedef profili ve görev profilleri heuristiktir. Hedef araçların yetenekleri ve
+  prompt tercihleri değiştiğinde yeniden değerlendirilmelidir.
 
 ## Yanlılık ve etik
 

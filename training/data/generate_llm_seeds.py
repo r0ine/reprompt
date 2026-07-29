@@ -17,11 +17,14 @@ import random
 import re
 import sys
 import time
+from contextlib import suppress
 from datetime import datetime, timezone
 from pathlib import Path
 
 import click
 import requests
+
+from clarify_prompt.prompts.types import TARGET_PROFILES
 
 SECRETS_PATH = Path(r"C:\Users\Kemal\Desktop\Workspace\secrets\.env")
 OUT_PATH = Path("training/datasets/raw/llm_seeds.jsonl")
@@ -38,14 +41,21 @@ CATEGORIES = [
     "multi_step",
 ]
 
-TARGETS = ["claude-code", "chatgpt", "cursor", "generic"]
+TARGETS = list(TARGET_PROFILES)
 
 LANGS = ["tr", "en", "de", "fr", "es", "pt", "ru", "ja", "zh", "ko"]
 
 LANG_NAMES = {
-    "tr": "Turkish", "en": "English", "de": "German", "fr": "French",
-    "es": "Spanish", "pt": "Portuguese", "ru": "Russian",
-    "ja": "Japanese", "zh": "Chinese", "ko": "Korean",
+    "tr": "Turkish",
+    "en": "English",
+    "de": "German",
+    "fr": "French",
+    "es": "Spanish",
+    "pt": "Portuguese",
+    "ru": "Russian",
+    "ja": "Japanese",
+    "zh": "Chinese",
+    "ko": "Korean",
 }
 
 MAX_RPS = 5
@@ -55,36 +65,86 @@ RETRY_BASE_DELAY = 3.0
 
 DOMAINS = {
     "code": [
-        "React dashboard", "REST API endpoint", "database migration",
-        "WebSocket chat", "authentication flow", "CI/CD pipeline",
-        "GraphQL schema", "microservice", "cron scheduler", "search indexer",
-        "payment integration", "file upload handler", "rate limiter",
-        "notification service", "caching layer", "state management",
-        "error boundary", "logging middleware", "test suite", "CLI tool",
-        "browser extension", "mobile app screen", "Docker setup",
-        "reverse proxy config", "queue consumer", "event bus",
-        "PDF generator", "email template engine", "analytics tracker",
+        "React dashboard",
+        "REST API endpoint",
+        "database migration",
+        "WebSocket chat",
+        "authentication flow",
+        "CI/CD pipeline",
+        "GraphQL schema",
+        "microservice",
+        "cron scheduler",
+        "search indexer",
+        "payment integration",
+        "file upload handler",
+        "rate limiter",
+        "notification service",
+        "caching layer",
+        "state management",
+        "error boundary",
+        "logging middleware",
+        "test suite",
+        "CLI tool",
+        "browser extension",
+        "mobile app screen",
+        "Docker setup",
+        "reverse proxy config",
+        "queue consumer",
+        "event bus",
+        "PDF generator",
+        "email template engine",
+        "analytics tracker",
     ],
     "writing": [
-        "blog post", "technical documentation", "API reference",
-        "bug report", "presentation slides", "email draft",
-        "product description", "meeting summary", "project brief",
-        "test plan", "release notes", "performance report",
-        "security assessment", "cost analysis", "user guide",
-        "changelog entry", "code review feedback", "RFC document",
-        "onboarding guide", "troubleshooting doc", "architecture decision record",
+        "blog post",
+        "technical documentation",
+        "API reference",
+        "bug report",
+        "presentation slides",
+        "email draft",
+        "product description",
+        "meeting summary",
+        "project brief",
+        "test plan",
+        "release notes",
+        "performance report",
+        "security assessment",
+        "cost analysis",
+        "user guide",
+        "changelog entry",
+        "code review feedback",
+        "RFC document",
+        "onboarding guide",
+        "troubleshooting doc",
+        "architecture decision record",
     ],
     "data": [
-        "ETL pipeline", "data cleaning script", "SQL query optimization",
-        "Pandas analysis", "chart/visualization", "CSV parser",
-        "data validation", "feature engineering", "model evaluation",
-        "A/B test analysis", "time series forecast", "anomaly detection",
+        "ETL pipeline",
+        "data cleaning script",
+        "SQL query optimization",
+        "Pandas analysis",
+        "chart/visualization",
+        "CSV parser",
+        "data validation",
+        "feature engineering",
+        "model evaluation",
+        "A/B test analysis",
+        "time series forecast",
+        "anomaly detection",
     ],
     "devops": [
-        "Kubernetes deployment", "Terraform module", "GitHub Actions workflow",
-        "monitoring dashboard", "alerting rules", "backup strategy",
-        "load testing setup", "SSL certificate renewal", "DNS configuration",
-        "container orchestration", "secrets management", "rollback procedure",
+        "Kubernetes deployment",
+        "Terraform module",
+        "GitHub Actions workflow",
+        "monitoring dashboard",
+        "alerting rules",
+        "backup strategy",
+        "load testing setup",
+        "SSL certificate renewal",
+        "DNS configuration",
+        "container orchestration",
+        "secrets management",
+        "rollback procedure",
     ],
 }
 
@@ -115,7 +175,6 @@ Return ONLY a JSON array of objects. Each object:
 {{"raw": "...", "optimized": "...", "complexity": "low|medium|high"}}
 
 No markdown fences, no explanation. Just the JSON array.""",
-
     "question_first": """Generate {n} DIVERSE training examples for a prompt-engineering AI.
 
 Category: QUESTION FIRST — the AI should first ask 2-4 clarifying questions, then provide the structured prompt based on assumed answers.
@@ -138,7 +197,6 @@ Rules for the OPTIMIZED output:
 
 Return ONLY a JSON array:
 {{"raw": "...", "optimized": "...", "complexity": "low|medium|high"}}""",
-
     "context_aware": """Generate {n} DIVERSE training examples for a prompt-engineering AI.
 
 Category: CONTEXT AWARE — the input includes both a raw prompt AND project context (tech stack, existing code patterns, team conventions). The output should be tailored to that context.
@@ -161,7 +219,6 @@ Rules for the OPTIMIZED prompt:
 
 Return ONLY a JSON array:
 {{"raw": "...", "optimized": "...", "complexity": "medium|high"}}""",
-
     "system_integrated": """Generate {n} DIVERSE training examples for a prompt-engineering AI.
 
 Category: SYSTEM INTEGRATED — the input includes a raw prompt plus system-level instructions (role, persona, rules). The output weaves both into a coherent enhanced prompt.
@@ -182,7 +239,6 @@ Rules for the OPTIMIZED prompt:
 
 Return ONLY a JSON array:
 {{"raw": "...", "optimized": "...", "complexity": "medium|high"}}""",
-
     "ambiguity_resolve": """Generate {n} DIVERSE training examples for a prompt-engineering AI.
 
 Category: AMBIGUITY RESOLVE — the input is extremely vague. The output should state explicit assumptions and then produce the best possible prompt.
@@ -204,7 +260,6 @@ Rules for the OPTIMIZED output:
 
 Return ONLY a JSON array:
 {{"raw": "...", "optimized": "...", "complexity": "low|medium|high"}}""",
-
     "multi_step": """Generate {n} DIVERSE training examples for a prompt-engineering AI.
 
 Category: MULTI-STEP — the input is a complex request that should be broken into phased, prioritized steps.
@@ -235,10 +290,25 @@ TARGET_RULES: dict[str, str] = {
     "chatgpt": """- Use Markdown headings: ## Goal, ## Context, ## Constraints, ## Acceptance criteria, ## Output format
 - Conversational but precise tone
 - Explicitly state what NOT to do""",
+    "codex": """- Write a repository-aware implementation brief with exact scope and invariants
+- Require inspection before edits and proportionate verification after them
+- End with expected changed files, checks, and unresolved limitations""",
     "cursor": """- Numbered step list format, IDE-aware
 - Reference file patterns (e.g., "find files matching src/**/*.ts")
 - Include "Do not" guardrails at the end
 - Keep it scannable — no long paragraphs""",
+    "deepseek": """- Put the technical problem, constraints, interfaces, and expected result first
+- Include known bounds, edge cases, and deterministic acceptance examples
+- Ask for concise rationale, not hidden chain-of-thought""",
+    "gemini": """- Enumerate supplied files, images, and sources and state how each should be used
+- Separate observed evidence, external sources, and model inference
+- Use Markdown and request direct links when current browsing is required""",
+    "github-copilot": """- Focus on repository-relative files and selected symbols
+- Keep the change set concise and preserve public contracts
+- Include tests and the repository's normal lint, type, and build checks""",
+    "grok": """- State whether live information is required and define its time range
+- Require dates and direct links for current claims
+- Separate confirmed evidence from commentary or speculation""",
     "generic": """- Use Markdown headings: ## Goal, ## Context, ## Steps, ## Acceptance criteria, ## Output format
 - Profile-agnostic — should work with any LLM
 - Clear, structured, no assumptions about tool access""",
@@ -280,7 +350,10 @@ def api_call(session: requests.Session, api_key: str, prompt: str, attempt: int 
     payload = {
         "model": DEEPSEEK_MODEL,
         "messages": [
-            {"role": "system", "content": "You are a training data generator. Return ONLY valid JSON arrays. No markdown, no explanation."},
+            {
+                "role": "system",
+                "content": "You are a training data generator. Return ONLY valid JSON arrays. No markdown, no explanation.",
+            },
             {"role": "user", "content": prompt},
         ],
         "temperature": 0.9,
@@ -290,10 +363,16 @@ def api_call(session: requests.Session, api_key: str, prompt: str, attempt: int 
 
     try:
         resp = session.post(NIM_ENDPOINT, json=payload, headers=headers, timeout=300)
-    except (requests.Timeout, requests.ConnectionError, requests.exceptions.ChunkedEncodingError) as exc:
+    except (
+        requests.Timeout,
+        requests.ConnectionError,
+        requests.exceptions.ChunkedEncodingError,
+    ) as exc:
         if attempt < MAX_RETRIES:
-            delay = RETRY_BASE_DELAY * (2 ** attempt) + random.uniform(0, 1)
-            log(f"  [RETRY] Baglanti hatasi, {delay:.1f}s bekleyip tekrar ({attempt+1}/{MAX_RETRIES})...")
+            delay = RETRY_BASE_DELAY * (2**attempt) + random.uniform(0, 1)
+            log(
+                f"  [RETRY] Baglanti hatasi, {delay:.1f}s bekleyip tekrar ({attempt + 1}/{MAX_RETRIES})..."
+            )
             time.sleep(delay)
             return api_call(session, api_key, prompt, attempt + 1)
         log(f"  [FAIL] API erisim hatasi: {exc}")
@@ -301,7 +380,7 @@ def api_call(session: requests.Session, api_key: str, prompt: str, attempt: int 
 
     if resp.status_code == 429:
         if attempt < MAX_RETRIES:
-            delay = RETRY_BASE_DELAY * (2 ** attempt) + random.uniform(0, 2)
+            delay = RETRY_BASE_DELAY * (2**attempt) + random.uniform(0, 2)
             log(f"  [RETRY] Rate limit, {delay:.1f}s bekleniyor...")
             time.sleep(delay)
             return api_call(session, api_key, prompt, attempt + 1)
@@ -310,7 +389,7 @@ def api_call(session: requests.Session, api_key: str, prompt: str, attempt: int 
 
     if resp.status_code != 200:
         if attempt < MAX_RETRIES and resp.status_code >= 500:
-            delay = RETRY_BASE_DELAY * (2 ** attempt)
+            delay = RETRY_BASE_DELAY * (2**attempt)
             log(f"  [RETRY] Server error {resp.status_code}...")
             time.sleep(delay)
             return api_call(session, api_key, prompt, attempt + 1)
@@ -347,7 +426,7 @@ def parse_batch_response(raw_json: str) -> list[dict]:
     end = text.rfind("]")
     if start < 0 or end <= start:
         return []
-    text = text[start:end + 1]
+    text = text[start : end + 1]
 
     try:
         arr = json.loads(text)
@@ -374,7 +453,9 @@ def parse_batch_response(raw_json: str) -> list[dict]:
     return valid
 
 
-def build_meta_prompt(category: str, lang: str, target: str, batch_size: int, rng: random.Random) -> str:
+def build_meta_prompt(
+    category: str, lang: str, target: str, batch_size: int, rng: random.Random
+) -> str:
     template = META_PROMPTS[category]
     return template.format(
         n=batch_size,
@@ -397,39 +478,57 @@ def make_plan(
 
     batches_needed = (total + BATCH_SIZE_PER_CALL - 1) // BATCH_SIZE_PER_CALL
     plan = []
-    idx = 0
-    for _ in range(batches_needed):
-        plan.append(combos[idx % len(combos)])
-        idx += 1
+    for batch_index in range(batches_needed):
+        plan.append(combos[batch_index % len(combos)])
     return plan
 
 
 @click.command()
 @click.option("--count", "-n", default=5000, help="Hedef ornek sayisi")
 @click.option("--lang", "-l", default=None, help="Virgul-ayirli dil filtreleri (tr,en,de...)")
-@click.option("--target", "-t", default=None, help="Virgul-ayirli hedef profiller (claude-code,chatgpt...)")
-@click.option("--category", "-c", default=None, help="Virgul-ayirli kategoriler (direct_enhance,question_first...)")
+@click.option(
+    "--target", "-t", default=None, help="Virgul-ayirli hedef profiller (claude-code,chatgpt...)"
+)
+@click.option(
+    "--category",
+    "-c",
+    default=None,
+    help="Virgul-ayirli kategoriler (direct_enhance,question_first...)",
+)
 @click.option("--seed", "-s", default=42, help="Rastgelelik tohumu")
 @click.option("--append/--overwrite", default=True, help="Mevcut dosyaya ekle veya sifirdan yaz")
 @click.option("--dry-run", is_flag=True, help="Plan goster, API cagirma")
-def main(count: int, lang: str | None, target: str | None, category: str | None,
-         seed: int, append: bool, dry_run: bool) -> None:
+def main(
+    count: int,
+    lang: str | None,
+    target: str | None,
+    category: str | None,
+    seed: int,
+    append: bool,
+    dry_run: bool,
+) -> None:
 
     rng = random.Random(seed)
 
-    sel_langs = [l.strip() for l in lang.split(",")] if lang else LANGS
-    sel_targets = [t.strip() for t in target.split(",")] if target else TARGETS
-    sel_categories = [c.strip() for c in category.split(",")] if category else CATEGORIES
+    sel_langs = [lang_code.strip() for lang_code in lang.split(",")] if lang else LANGS
+    sel_targets = [target_name.strip() for target_name in target.split(",")] if target else TARGETS
+    sel_categories = (
+        [category_name.strip() for category_name in category.split(",")] if category else CATEGORIES
+    )
 
-    for l in sel_langs:
-        if l not in LANGS:
-            raise click.BadParameter(f"Bilinmeyen dil: {l}. Gecerli: {', '.join(LANGS)}")
-    for t in sel_targets:
-        if t not in TARGETS:
-            raise click.BadParameter(f"Bilinmeyen hedef: {t}. Gecerli: {', '.join(TARGETS)}")
-    for c in sel_categories:
-        if c not in CATEGORIES:
-            raise click.BadParameter(f"Bilinmeyen kategori: {c}. Gecerli: {', '.join(CATEGORIES)}")
+    for lang_code in sel_langs:
+        if lang_code not in LANGS:
+            raise click.BadParameter(f"Bilinmeyen dil: {lang_code}. Gecerli: {', '.join(LANGS)}")
+    for target_name in sel_targets:
+        if target_name not in TARGETS:
+            raise click.BadParameter(
+                f"Bilinmeyen hedef: {target_name}. Gecerli: {', '.join(TARGETS)}"
+            )
+    for category_name in sel_categories:
+        if category_name not in CATEGORIES:
+            raise click.BadParameter(
+                f"Bilinmeyen kategori: {category_name}. Gecerli: {', '.join(CATEGORIES)}"
+            )
 
     plan = make_plan(count, sel_langs, sel_targets, sel_categories, rng)
 
@@ -455,10 +554,8 @@ def main(count: int, lang: str | None, target: str | None, category: str | None,
     existing_ids: set[str] = set()
     if append and OUT_PATH.exists():
         for line in OUT_PATH.read_text(encoding="utf-8").splitlines():
-            try:
+            with suppress(json.JSONDecodeError, KeyError):
                 existing_ids.add(json.loads(line)["id"])
-            except (json.JSONDecodeError, KeyError):
-                pass
         log(f"  Mevcut kayit: {len(existing_ids)}")
 
     mode = "a" if append else "w"
@@ -486,7 +583,7 @@ def main(count: int, lang: str | None, target: str | None, category: str | None,
 
                 prompt = build_meta_prompt(cat, lng, tgt, batch_n, rng)
                 last_call_time = time.monotonic()
-                log(f"  Batch {batch_idx+1}/{len(plan)}: {cat}/{lng}/{tgt} (n={batch_n})...")
+                log(f"  Batch {batch_idx + 1}/{len(plan)}: {cat}/{lng}/{tgt} (n={batch_n})...")
 
                 raw_response = api_call(session, api_key, prompt)
                 if not raw_response:
@@ -497,7 +594,9 @@ def main(count: int, lang: str | None, target: str | None, category: str | None,
                 examples = parse_batch_response(raw_response)
                 if not examples:
                     failed_batches += 1
-                    log(f"    -> parse hatasi ({len(raw_response)} kar). Ilk 200: {raw_response[:200]}")
+                    log(
+                        f"    -> parse hatasi ({len(raw_response)} kar). Ilk 200: {raw_response[:200]}"
+                    )
                     continue
 
                 batch_written = 0
@@ -514,7 +613,10 @@ def main(count: int, lang: str | None, target: str | None, category: str | None,
                         continue
                     existing_ids.add(rid)
 
-                    has_questions = "?" in opt_text and cat in ("question_first", "ambiguity_resolve")
+                    has_questions = "?" in opt_text and cat in (
+                        "question_first",
+                        "ambiguity_resolve",
+                    )
                     has_system = "[System]" in raw_text or "[system]" in raw_text
                     has_context = "[Context]" in raw_text or "[context]" in raw_text
 

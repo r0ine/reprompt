@@ -26,8 +26,10 @@ def isolate_config(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
 def test_cli_help_lists_targets(isolate_config: None) -> None:
     result = CliRunner().invoke(app, ["rewrite", "--help"])
     assert result.exit_code == 0
-    for target in ("claude-code", "chatgpt", "cursor", "generic"):
+    for target in ("claude-code", "chatgpt", "codex", "cursor", "gemini", "generic"):
         assert target in result.output
+    assert "--task" in result.output
+    assert "--detail" in result.output
 
 
 def test_cli_version(isolate_config: None) -> None:
@@ -47,6 +49,40 @@ def test_cli_runs_with_fake_engine(monkeypatch: pytest.MonkeyPatch, isolate_conf
     result = CliRunner().invoke(app, ["rewrite", "-t", "generic", "raw request goes here"])
     assert result.exit_code == 0, result.output
     assert "hello" in result.output
+
+
+def test_cli_composes_selected_profiles(
+    monkeypatch: pytest.MonkeyPatch,
+    isolate_config: None,
+) -> None:
+    fake_engine = _FakeEngine("rewritten")
+    monkeypatch.setattr("clarify_prompt.cli.main.make_engine", lambda cfg: fake_engine)
+
+    captured: dict[str, str] = {}
+
+    def capture_prompt(system_prompt, user_prompt, **_):
+        captured["system"] = system_prompt
+        return "rewritten"
+
+    fake_engine.generate = capture_prompt
+    result = CliRunner().invoke(
+        app,
+        [
+            "rewrite",
+            "--target",
+            "codex",
+            "--task",
+            "debugging",
+            "--detail",
+            "exhaustive",
+            "api hata veriyor",
+        ],
+    )
+
+    assert result.exit_code == 0, result.output
+    assert "Task profile: debugging" in captured["system"]
+    assert "Detail level: exhaustive" in captured["system"]
+    assert "Target profile: codex" in captured["system"]
 
 
 def test_shortcut_syntax(monkeypatch: pytest.MonkeyPatch, isolate_config: None) -> None:

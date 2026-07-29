@@ -53,25 +53,46 @@ python -m training.data.build --all
 # Pilot (3B, 1 epoch) — 30-45 dk
 python -m training.sft.train --config training/configs/qwen2.5-3b-r16.yaml
 
-# Tam (7B, 3 epoch) — 2-3 saat, RTX 4060'ta sınırda
-python -m training.sft.train --config training/configs/qwen2.5-7b-r16.yaml
+# Üretim (7B, rank 32 rsLoRA, 4096 context)
+python -m training.sft.train --config training/configs/qwen2.5-7b-production.yaml
 ```
 
-`nvidia-smi -l 5` ile VRAM izle.
+Üretim profili RTX 4060 8 GB için batch size 1, gradient accumulation 8, 4-bit NF4 ve
+gradient checkpointing kullanır. Süre veri seti boyutuna bağlıdır; tam koşudan önce
+`training/configs/qwen2.5-3b-pilot.yaml` ile veri ve format kontrolü yap.
+
+`nvidia-smi -l 5` ile VRAM izle. OOM durumunda ilk olarak `max_seq_length` değerini 3072'ye
+indir; çekirdek sistem promptunu eski kısa kopyayla değiştirme. Eğitim ve çıkarım aynı
+`select_system_prompt()` derleyicisini kullanmalıdır.
 
 ## Değerlendirme
 
 ```bash
-python -m training.eval.run --model training/outputs/qwen2.5-7b-r16/final
+python -m training.eval.run --model training/outputs/qwen2.5-7b-production/final
 python -m training.eval.spot_check --report training/eval/reports/report-XXXX.jsonl
 ```
 
 ## Paketleme
 
 ```bash
-python -m training.pack.merge_lora --adapter training/outputs/qwen2.5-7b-r16/final
-python -m training.pack.convert_to_gguf --model training/outputs/merged --quant q4_k_m
+python -m training.pack.merge_lora \
+  --adapter training/outputs/qwen2.5-7b-production/final \
+  --out training/outputs/qwen2.5-7b-merged
+
+python -m training.pack.convert_to_gguf \
+  --model training/outputs/qwen2.5-7b-merged \
+  --quant q4_k_m \
+  --out training/outputs/gguf
+
+python -m training.pack.verify_gguf \
+  training/outputs/gguf/clarify-prompt-qwen2.5-7b-q4_k_m.gguf \
+  --target-gib 4.5 \
+  --tolerance-gib 0.75
 ```
+
+Q4_K_M dosyası dönüştürücü sürümüne göre yaklaşık 4–5 GiB çıkar. `verify_gguf`, GGUF
+başlığını ve boyut aralığını kontrol eder; model kalitesi için değerlendirme komutlarının
+yerine geçmez.
 
 ## Yayın (HF Hub)
 
@@ -82,7 +103,7 @@ python -m training.pack.push_hf --repo <ORG>/clarify-prompt-qwen2.5-7b-v1 \
 
 ## Sorun giderme
 
-- **OOM:** `training/configs/*.yaml` içinde `per_device_train_batch_size: 1`, `max_seq_length: 1024` yap.
+- **OOM:** batch size zaten 1 ise `max_seq_length` değerini 3072 veya 2048'e indir.
 - **Unsloth import hatası (Windows):** WSL2'ye geç, `bash training/scripts/setup_env.sh`.
 - **CUDA sürüm uyumsuzluğu:** PyTorch'u driver sürümüne göre yeniden kur.
 - **bitsandbytes çökmesi:** `pip install bitsandbytes-windows` fallback.

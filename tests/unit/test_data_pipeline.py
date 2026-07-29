@@ -7,6 +7,10 @@ from pathlib import Path
 
 import pytest
 
+from clarify_prompt.prompts.types import TARGET_PROFILES
+
+LEGACY_TARGETS = {"claude-code", "chatgpt", "cursor", "generic"}
+
 
 def test_gold_jsonl_exists_and_valid():
     gold = Path("training/datasets/raw/gold.jsonl")
@@ -21,7 +25,7 @@ def test_gold_jsonl_exists_and_valid():
             assert "output" in rec
             assert "target" in rec
             assert "lang" in rec
-            assert rec["target"] in ("claude-code", "chatgpt", "cursor", "generic")
+            assert rec["target"] in TARGET_PROFILES
             assert rec["lang"] in ("tr", "en", "mix")
             assert len(rec["input"]) >= 10
             assert len(rec["output"]) >= 30
@@ -39,7 +43,7 @@ def test_augmented_jsonl_valid():
             count += 1
             assert "input" in rec
             assert "output" in rec
-            assert rec["target"] in ("claude-code", "chatgpt", "cursor", "generic")
+            assert rec["target"] in TARGET_PROFILES
     assert count >= 50
 
 
@@ -75,7 +79,8 @@ def test_synthetic_jsonl_valid():
             targets.add(rec["target"])
             langs.add(rec["lang"])
     assert count >= 100_000
-    assert targets == {"claude-code", "chatgpt", "cursor", "generic"}
+    assert LEGACY_TARGETS.issubset(targets)
+    assert targets.issubset(set(TARGET_PROFILES))
     assert langs.issuperset({"tr", "en"})
     assert len(langs) >= 2
 

@@ -6,15 +6,19 @@ from typing import Literal
 
 from pydantic import BaseModel, Field
 
+from clarify_prompt.prompts.types import DetailLevel, TargetProfile, TaskProfile
+
+BackendName = Literal["llama", "llama-py"]
+
 
 class ModelConfig(BaseModel):
     path: str | None = Field(default=None, description="Path to GGUF file")
-    backend: Literal["llama", "llama-py"] = "llama"
+    backend: BackendName = "llama"
 
 
 class GenerateConfig(BaseModel):
-    max_new_tokens: int = 512
-    temperature: float = Field(default=0.7, ge=0.0, le=2.0)
+    max_new_tokens: int = 1024
+    temperature: float = Field(default=0.3, ge=0.0, le=2.0)
     top_p: float = Field(default=0.9, ge=0.0, le=1.0)
     repeat_penalty: float = Field(default=1.05, ge=0.0, le=2.0)
 
@@ -22,7 +26,7 @@ class GenerateConfig(BaseModel):
 class LlamaConfig(BaseModel):
     cli_binary: str = "llama-cli"
     n_gpu_layers: int = Field(default=33, ge=0)
-    ctx_size: int = Field(default=4096, ge=256)
+    ctx_size: int = Field(default=8192, ge=256)
 
 
 class LogConfig(BaseModel):
@@ -32,7 +36,9 @@ class LogConfig(BaseModel):
 
 class Config(BaseModel):
     model: ModelConfig = ModelConfig()
-    target: Literal["claude-code", "chatgpt", "cursor", "generic"] = "generic"
+    target: TargetProfile = "generic"
+    task: TaskProfile = "auto"
+    detail: DetailLevel = "balanced"
     generate: GenerateConfig = GenerateConfig()
     llama: LlamaConfig = LlamaConfig()
     log: LogConfig = LogConfig()

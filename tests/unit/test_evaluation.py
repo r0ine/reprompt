@@ -6,8 +6,6 @@ Fonksiyonlar burada bagimsiz olarak test ediliyor.
 
 from __future__ import annotations
 
-import pytest
-
 
 def structure_score(text: str, target: str) -> float:
     score = 0.0
@@ -16,8 +14,14 @@ def structure_score(text: str, target: str) -> float:
         found = sum(1 for t in tags if t in text)
         score = found / len(tags)
     elif target == "chatgpt":
-        headings = ["## Hedef", "## Goal", "## Baglam", "## Context",
-                     "## Kisitlar", "## Constraints"]
+        headings = [
+            "## Hedef",
+            "## Goal",
+            "## Baglam",
+            "## Context",
+            "## Kisitlar",
+            "## Constraints",
+        ]
         found = sum(1 for h in headings if h in text)
         score = min(found / 3, 1.0)
     elif target == "cursor":
@@ -25,8 +29,7 @@ def structure_score(text: str, target: str) -> float:
         has_donot = "Do not" in text or "not:" in text
         score = (0.5 if has_numbered else 0) + (0.5 if has_donot else 0)
     elif target == "generic":
-        headings = ["## Hedef", "## Goal", "## Adimlar", "## Steps",
-                     "## Kabul", "## Acceptance"]
+        headings = ["## Hedef", "## Goal", "## Adimlar", "## Steps", "## Kabul", "## Acceptance"]
         found = sum(1 for h in headings if h in text)
         score = min(found / 3, 1.0)
     return score

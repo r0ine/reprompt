@@ -2,7 +2,9 @@
 
 Ham, eksik, tek satırlık istekleri hedef LLM'in tam anlayacağı yapılandırılmış prompta çeviren açık kaynak yapay zeka.
 
-**Sıfırdan eğitilmiş, 359M parametreli özel transformer modeli.** Fine-tuning değil — kendi mimarisi, kendi tokenizer'ı, kendi eğitim verisi. Tak-çalıştır entegrasyon: Claude Code, ChatGPT, Cursor, Grok, Gemini, DeepSeek ve tüm platformlarla uyumlu.
+İki model hattı bulunur: yaklaşık 4–5 GiB Qwen 2.5 7B Q4_K_M üretim paketi için QLoRA
+ve deneysel 359M parametreli ClarifyGPT scratch mimarisi. Model ağırlıkları depoda yer
+almaz; yayımlanmadan önce ayrı değerlendirme raporu gerekir.
 
 ---
 
@@ -14,7 +16,8 @@ Sen `"şu bug'ı çöz"` yazdığında, clarify-prompt arada durup bu isteği al
 Görev → Bağlam → Kısıtlar → Kabul kriterleri → Çıktı formatı
 ```
 
-Sonuç: hedef LLM ilk denemede istediğin cevabı üretiyor. Üç tur boşa yazışma yok.
+Amaç, hedef modelin eksik bağlam yüzünden gereksiz tur harcamasını azaltmak. Araç hedef
+modelin doğruluğunu garanti etmez.
 
 ## Kısa demo
 
@@ -80,7 +83,7 @@ Reflection kodunu yeni Java sürümüne uyarla — mevcut kod derlemede hata ver
 
 ## Model mimarisi
 
-**ClarifyGPT** — sıfırdan tasarlanmış, decoder-only transformer:
+**ClarifyGPT araştırma hattı** — sıfırdan eğitim için tasarlanmış decoder-only transformer:
 
 | Özellik | Değer |
 |---|---|
@@ -99,7 +102,7 @@ Reflection kodunu yeni Java sürümüne uyarla — mevcut kod derlemede hata ver
 
 ### Neden sıfırdan?
 
-Fine-tuning yerine sıfırdan eğitim tercih ettik çünkü:
+Scratch hattı şu araştırma soruları için tutulur:
 - **Görev odaklı mimari:** Prompt dönüştürme spesifik bir görev — genel dil modeli kapasitesi gereksiz ağırlık.
 - **Küçük ve hızlı:** 359M parametre, 7B+ fine-tune modellerden 19x daha küçük.
 - **Tam kontrol:** Tokenizer, mimari, eğitim süreci — her katmanda optimizasyon mümkün.
@@ -109,14 +112,14 @@ Fine-tuning yerine sıfırdan eğitim tercih ettik çünkü:
 
 | Metrik | Değer |
 |---|---|
-| Toplam örnek | **100.000+** |
+| Sentetik üretim hedefi | **100.000** |
 | El yapımı altın örnekler | 50 |
 | Augmentation örnekleri | 110+ |
 | Sentetik üretim | 100.000 |
 | Desteklenen diller | **10** (TR, EN, DE, FR, ES, PT, RU, JA, ZH, KO) |
-| Hedef profiller | 4 (claude-code, chatgpt, cursor, generic) |
-| Veri sızıntısı | 0 (train/val/test tamamen ayrık) |
-| Train / Val / Test | 80.125 / 10.015 / 10.017 |
+| Hedef profiller | 9 |
+| Veri sızıntısı | Yayın öncesi doğrulama kapısı |
+| Train / Val / Test | Veri üretiminden sonra raporlanır |
 
 ### Dil dağılımı
 

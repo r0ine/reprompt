@@ -1,10 +1,10 @@
 """Public API for programmatic use.
 
-    from clarify_prompt import ClarifyEngine
+from clarify_prompt import ClarifyEngine
 
-    engine = ClarifyEngine(model="path/to/model.gguf")
-    result = engine.rewrite("login sayfası yap", target="claude-code")
-    print(result.text)
+engine = ClarifyEngine(model="path/to/model.gguf")
+result = engine.rewrite("login sayfası yap", target="claude-code")
+print(result.text)
 """
 
 from __future__ import annotations
@@ -12,15 +12,13 @@ from __future__ import annotations
 import os
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Literal
 
-from clarify_prompt.config.schema import Config, ModelConfig, LlamaConfig, GenerateConfig
-from clarify_prompt.engine.factory import make_engine
+from clarify_prompt.config.schema import BackendName, Config, LlamaConfig, ModelConfig
 from clarify_prompt.engine.backend import InferenceBackend
+from clarify_prompt.engine.factory import make_engine
 from clarify_prompt.postproc.pipeline import postprocess
 from clarify_prompt.prompts.selector import select_system_prompt
-
-TargetProfile = Literal["claude-code", "chatgpt", "cursor", "generic"]
+from clarify_prompt.prompts.types import DetailLevel, TargetProfile, TaskProfile
 
 
 @dataclass(frozen=True)
@@ -28,6 +26,8 @@ class RewriteResult:
     text: str
     target: TargetProfile
     model_path: str | None
+    task: TaskProfile = "auto"
+    detail: DetailLevel = "balanced"
 
 
 class ClarifyEngine:
@@ -39,9 +39,9 @@ class ClarifyEngine:
     def __init__(
         self,
         model: str | Path | None = None,
-        backend: str = "llama",
+        backend: BackendName = "llama",
         n_gpu_layers: int = 33,
-        ctx_size: int = 4096,
+        ctx_size: int = 8192,
     ) -> None:
         model_path = str(model) if model else os.environ.get("CLARIFY_PROMPT_MODEL_PATH")
         self._model_path = model_path
@@ -57,10 +57,12 @@ class ClarifyEngine:
         prompt: str,
         target: TargetProfile = "generic",
         explain: bool = False,
+        task: TaskProfile = "auto",
+        detail: DetailLevel = "balanced",
         temperature: float | None = None,
         max_tokens: int | None = None,
     ) -> RewriteResult:
-        sys_prompt = select_system_prompt(target, explain=explain)
+        sys_prompt = select_system_prompt(target, explain=explain, task=task, detail=detail)
         raw = self._engine.generate(
             system_prompt=sys_prompt,
             user_prompt=prompt.strip(),
@@ -69,11 +71,19 @@ class ClarifyEngine:
             top_p=self._gen_cfg.top_p,
         )
         cleaned = postprocess(raw)
-        return RewriteResult(text=cleaned, target=target, model_path=self._model_path)
+        return RewriteResult(
+            text=cleaned,
+            target=target,
+            model_path=self._model_path,
+            task=task,
+            detail=detail,
+        )
 
     def batch_rewrite(
         self,
         prompts: list[str],
         target: TargetProfile = "generic",
+        task: TaskProfile = "auto",
+        detail: DetailLevel = "balanced",
     ) -> list[RewriteResult]:
-        return [self.rewrite(p, target=target) for p in prompts]
+        return [self.rewrite(prompt, target=target, task=task, detail=detail) for prompt in prompts]

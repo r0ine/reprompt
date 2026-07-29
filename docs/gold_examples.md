@@ -15,7 +15,8 @@ Her örnek şu formatta:
     yapılandırılmış çıktı prompt'u
     ```
 
-`XXX` sıralı üç haneli sayı. `hedef` = `claude-code | chatgpt | cursor | generic`.
+`XXX` sıralı üç haneli sayı. Geçerli `hedef` değerleri
+`src/clarify_prompt/prompts/types.py` içindeki `TARGET_PROFILES` sabitinden alınır.
 
 ---
 
@@ -369,7 +370,7 @@ write tests for the auth module
 **Output:**
 ```
 <task>
-Write comprehensive unit and integration tests for the authentication module, covering login, registration, token refresh, and logout flows.
+Write unit and integration tests for the authentication module, covering login, registration, token refresh, and logout flows.
 </task>
 
 <context>

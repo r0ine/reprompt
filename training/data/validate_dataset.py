@@ -89,7 +89,9 @@ def main() -> None:
                 ids.add(json.loads(line)["id"])
         inter = all_ids & ids
         if inter:
-            console.print(f"  [red]SIZINTI: {name} ile onceki split arasinda {len(inter)} ortak ID[/red]")
+            console.print(
+                f"  [red]SIZINTI: {name} ile onceki split arasinda {len(inter)} ortak ID[/red]"
+            )
             overlap = True
         all_ids |= ids
 

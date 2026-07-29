@@ -11,23 +11,13 @@ import json
 from pathlib import Path
 
 import click
-import yaml
 import torch
+import yaml
 from rich.console import Console
 
-console = Console()
+from clarify_prompt.prompts.selector import select_system_prompt
 
-SYSTEM_PROMPT = (
-    "You are `clarify-prompt`, a rewriter that turns a raw user request "
-    "into a well-structured prompt for a downstream large language model.\n\n"
-    "Rules:\n"
-    "- Preserve the user's intent exactly. Do not add features or scope.\n"
-    "- Add missing structure: a clear goal, the context the target LLM needs, "
-    "acceptance criteria, and the expected output format.\n"
-    "- Do NOT answer the request yourself. Return the rewritten prompt, not the solution.\n"
-    "- Reply in the same language as the input.\n"
-    "- Format the rewritten prompt as a self-contained block."
-)
+console = Console()
 
 
 @click.command()
@@ -38,7 +28,9 @@ def main(config: Path) -> None:
 
     device_info = f"CUDA: {torch.cuda.is_available()}"
     if torch.cuda.is_available():
-        device_info += f" | {torch.cuda.get_device_name(0)} | {torch.cuda.mem_get_info()[1] / 1024**3:.1f} GB"
+        device_info += (
+            f" | {torch.cuda.get_device_name(0)} | {torch.cuda.mem_get_info()[1] / 1024**3:.1f} GB"
+        )
     console.print(f"[dim]{device_info}[/dim]")
 
     _train(cfg)
@@ -55,10 +47,10 @@ def _load_jsonl(path: str) -> list[dict]:
 
 
 def _train(cfg: dict) -> None:
-    from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig
-    from peft import LoraConfig, get_peft_model, prepare_model_for_kbit_training, TaskType
-    from trl import SFTConfig, SFTTrainer
     from datasets import Dataset
+    from peft import LoraConfig, TaskType, get_peft_model, prepare_model_for_kbit_training
+    from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig
+    from trl import SFTConfig, SFTTrainer
 
     base_model = cfg["base_model"]
 
@@ -95,6 +87,7 @@ def _train(cfg: dict) -> None:
         lora_dropout=lora_cfg["dropout"],
         target_modules=lora_cfg["target_modules"],
         bias=lora_cfg["bias"],
+        use_rslora=lora_cfg.get("use_rslora", False),
         task_type=TaskType.CAUSAL_LM,
     )
     model = get_peft_model(model, peft_config)
@@ -109,12 +102,19 @@ def _train(cfg: dict) -> None:
     def to_chatml(records: list[dict]) -> list[str]:
         texts = []
         for rec in records:
+            system_prompt = select_system_prompt(
+                rec.get("target", "generic"),
+                task=rec.get("task", "auto"),
+                detail=rec.get("detail", "balanced"),
+            )
             messages = [
-                {"role": "system", "content": SYSTEM_PROMPT},
+                {"role": "system", "content": system_prompt},
                 {"role": "user", "content": rec["input"]},
                 {"role": "assistant", "content": rec["output"]},
             ]
-            text = tokenizer.apply_chat_template(messages, tokenize=False, add_generation_prompt=False)
+            text = tokenizer.apply_chat_template(
+                messages, tokenize=False, add_generation_prompt=False
+            )
             texts.append(text)
         return texts
 
@@ -171,7 +171,7 @@ def _train(cfg: dict) -> None:
     trainer.save_model(final_dir)
     tokenizer.save_pretrained(final_dir)
 
-    console.print(f"\n[green]Egitim tamamlandi![/green]")
+    console.print("\n[green]Egitim tamamlandi![/green]")
     console.print(f"  Train loss: {train_result.training_loss:.4f}")
     console.print(f"  LoRA adapter: {final_dir}")
 

@@ -71,5 +71,8 @@ bench/results/
 # Plan agaci ham cikti (denetim icin lokal tutulur; git'e girmez)
 agac/ham/
 
+# Yeniden üretilebilir 1 GiB Markdown corpus
+library/corpus-1gib/
+
 # Hugging Face cache (proje icinde tutulursa)
 .cache/

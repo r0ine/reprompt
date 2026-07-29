@@ -23,7 +23,8 @@ def cli(prompt: str, target: str, interval: float) -> None:
 def run(prompt: str, target: str, interval: float) -> None:
     proc = subprocess.Popen(
         ["clarify-prompt", "-t", target, prompt],
-        stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
     )
     peak_vram_mb = 0
     peak_rss_mb = 0
@@ -52,7 +53,10 @@ def _snapshot_vram_mb() -> int:
     try:
         out = subprocess.run(
             ["nvidia-smi", "--query-gpu=memory.used", "--format=csv,noheader,nounits"],
-            capture_output=True, text=True, timeout=2, check=False,
+            capture_output=True,
+            text=True,
+            timeout=2,
+            check=False,
         )
         if out.returncode == 0:
             return int(out.stdout.strip().splitlines()[0])
@@ -64,6 +68,7 @@ def _snapshot_vram_mb() -> int:
 def _snapshot_rss_mb(pid: int) -> int:
     try:
         import psutil
+
         return int(psutil.Process(pid).memory_info().rss / (1024 * 1024))
     except Exception:  # noqa: BLE001
         return 0

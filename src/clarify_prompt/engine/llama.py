@@ -49,16 +49,24 @@ class LlamaSubprocessBackend:
     ) -> str:
         cmd = [
             self.cli_binary,
-            "--model", str(self.model_path),
-            "--n-gpu-layers", str(self.n_gpu_layers),
-            "--ctx-size", str(self.ctx_size),
-            "--n-predict", str(max_new_tokens),
-            "--temp", f"{temperature:.3f}",
-            "--top-p", f"{top_p:.3f}",
+            "--model",
+            str(self.model_path),
+            "--n-gpu-layers",
+            str(self.n_gpu_layers),
+            "--ctx-size",
+            str(self.ctx_size),
+            "--n-predict",
+            str(max_new_tokens),
+            "--temp",
+            f"{temperature:.3f}",
+            "--top-p",
+            f"{top_p:.3f}",
             "--simple-io",
             "--no-display-prompt",
-            "--reverse-prompt", "<|im_end|>",
-            "--prompt", _chatml_render(system_prompt, user_prompt),
+            "--reverse-prompt",
+            "<|im_end|>",
+            "--prompt",
+            _chatml_render(system_prompt, user_prompt),
         ]
         try:
             proc = subprocess.run(
@@ -71,9 +79,7 @@ class LlamaSubprocessBackend:
                 check=False,
             )
         except subprocess.TimeoutExpired as exc:
-            raise GenerationError(
-                f"llama-cli timed out after {self.timeout_s:.1f}s"
-            ) from exc
+            raise GenerationError(f"llama-cli timed out after {self.timeout_s:.1f}s") from exc
         if proc.returncode != 0:
             raise GenerationError(
                 f"llama-cli exited {proc.returncode}: {proc.stderr.strip()[:400]}"
@@ -125,9 +131,12 @@ class LlamaPyBackend:
             top_p=top_p,
         )
         try:
-            return out["choices"][0]["message"]["content"]
+            content = out["choices"][0]["message"]["content"]
         except (KeyError, IndexError, TypeError) as exc:
             raise GenerationError(f"unexpected llama_cpp response shape: {exc}") from exc
+        if not isinstance(content, str):
+            raise GenerationError("llama_cpp response content is not text")
+        return content
 
 
 def _chatml_render(system_prompt: str, user_prompt: str) -> str:

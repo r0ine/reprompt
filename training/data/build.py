@@ -34,26 +34,32 @@ def main(
 
     if gold:
         from training.data import import_gold
+
         console.rule("[bold]Import gold examples")
         import_gold.run()
     if from_transcripts:
         from training.data import harvest_transcripts
+
         console.rule("[bold]Harvest transcripts")
         harvest_transcripts.run()
     if from_shared:
         from training.data import harvest_shared_datasets
+
         console.rule("[bold]Harvest shared datasets")
         harvest_shared_datasets.run()
     if distill:
         from training.data import distill_teacher
+
         console.rule("[bold]Teacher distillation")
         distill_teacher.run()
     if merge:
         from training.data import merge_dedup
+
         console.rule("[bold]Merge + dedup")
         merge_dedup.run()
     if split:
         from training.data import split_train_val_test
+
         console.rule("[bold]Split train/val/test")
         split_train_val_test.run()
 

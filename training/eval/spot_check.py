@@ -18,8 +18,12 @@ SPOT_DIR = Path("training/eval/spotchecks")
 
 
 @click.command()
-@click.option("--report", type=click.Path(exists=True, path_type=Path), required=True,
-              help="Path to a report-*.jsonl produced by eval/run.py")
+@click.option(
+    "--report",
+    type=click.Path(exists=True, path_type=Path),
+    required=True,
+    help="Path to a report-*.jsonl produced by eval/run.py",
+)
 @click.option("--n", type=int, default=30, show_default=True)
 def cli(report: Path, n: int) -> None:
     run(report, n)
@@ -46,16 +50,24 @@ def run(report: Path, n: int) -> None:
             if verdict not in counts:
                 verdict = "o"
             counts[verdict] += 1
-            fh.write(json.dumps({
-                "run_id": stamp,
-                "test_example_id": row["test_example_id"],
-                "kemal_verdict": {"g": "good", "o": "orta", "k": "kotu"}[verdict],
-            }, ensure_ascii=False) + "\n")
+            fh.write(
+                json.dumps(
+                    {
+                        "run_id": stamp,
+                        "test_example_id": row["test_example_id"],
+                        "kemal_verdict": {"g": "good", "o": "orta", "k": "kotu"}[verdict],
+                    },
+                    ensure_ascii=False,
+                )
+                + "\n"
+            )
 
     total = sum(counts.values())
-    console.print(f"\n[bold]good={counts['g']}  orta={counts['o']}  kotu={counts['k']}  total={total}")
+    console.print(
+        f"\n[bold]good={counts['g']}  orta={counts['o']}  kotu={counts['k']}  total={total}"
+    )
     if total:
-        console.print(f"[green]iyi/orta orani: {(counts['g']+counts['o'])/total:.1%}[/green]")
+        console.print(f"[green]iyi/orta orani: {(counts['g'] + counts['o']) / total:.1%}[/green]")
 
 
 if __name__ == "__main__":

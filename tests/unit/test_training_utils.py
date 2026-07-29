@@ -99,8 +99,7 @@ class TestEvaluateFunction:
         device = torch.device("cpu")
 
         dummy_data = [
-            {"input_ids": torch.randint(0, 100, (2, 16)),
-             "labels": torch.randint(0, 100, (2, 16))},
+            {"input_ids": torch.randint(0, 100, (2, 16)), "labels": torch.randint(0, 100, (2, 16))},
         ]
         val_loss = evaluate(model, dummy_data, device)
         assert isinstance(val_loss, float)

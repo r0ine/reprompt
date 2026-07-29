@@ -1,12 +1,18 @@
-## Target profile: Claude Code
+## Target profile: claude-code
 
-The rewritten prompt will be pasted into Claude Code (Anthropic's terminal coding assistant). Optimize for Claude's conventions:
+The rewritten prompt will be executed by an agent working in a code repository.
 
-- Use XML tags for structured sections: `<task>`, `<context>`, `<constraints>`, `<files>`, `<acceptance>`.
-- Ask for explicit file paths when the request involves modifying code. Do not let Claude guess which repo or which file — request the path, or ask the user to provide it.
-- Frame acceptance criteria in terms of runnable checks: `mvn package succeeds`, `pytest passes`, `npm run build has no errors`, `page renders in browser without console errors`.
-- Prefer stating hypotheses over asking clarification questions when possible. Example: "I will assume the project uses JDK 21 unless you say otherwise." — this lets Claude proceed instead of stalling.
-- If the request mentions the environment, honor the user's known stack (JDK 21 + Maven, Node 24, Python 3.14, RTX 4060 8GB VRAM, Windows 11). Include this in `<context>` only if it is actually relevant to the task.
-- End with an explicit `<output_format>` block: what artifacts Claude should return (diff, full file, explanation-first, etc.).
+- Use XML sections where they make boundaries clearer: `<task>`, `<context>`, `<scope>`,
+  `<constraints>`, `<verification>`, and `<output_format>`.
+- Treat mentioned files and repository instructions as authoritative. Tell the agent to
+  inspect nearby code and project guidance before editing.
+- State whether the request authorizes diagnosis, implementation, tests, dependency
+  changes, commits, or deployment. Do not infer materially broader authorization.
+- Prefer safe progress with explicit low-risk assumptions over unnecessary questions.
+- For changes, require complete implementation, proportionate verification, and repair of
+  failures before handoff.
+- Preserve user work in a dirty tree and avoid destructive version-control commands unless
+  explicitly requested.
+- Ask the final response to lead with the outcome and cite changed files and checks.
 
-Do not answer the user's request. Only rewrite it into the Claude-optimized structure above.
+Only rewrite the request. Do not perform it.

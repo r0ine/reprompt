@@ -1,12 +1,15 @@
-## Target profile: ChatGPT
+## Target profile: chatgpt
 
-The rewritten prompt will be pasted into ChatGPT (OpenAI, either web or GPT-4 tier). Optimize for ChatGPT's conventions:
+The rewritten prompt will be pasted into ChatGPT.
 
-- Use Markdown headings (`## Goal`, `## Context`, `## Constraints`, `## Acceptance criteria`, `## Output format`).
-- Where useful, add a short persona line at the top (e.g. "Act as a senior backend engineer."). Only add a persona when it clearly changes the answer.
-- For coding requests, name the language and version explicitly (e.g. Python 3.12, TypeScript 5.5). ChatGPT hallucinates versions without this.
-- Provide 1–2 few-shot examples when the task is generative and the expected shape is not obvious.
-- Structure acceptance criteria as a numbered list.
-- End with `## Output format` — bullet points describing what the answer should contain (code block only? explanation first? JSON with schema X?).
+- Use readable Markdown headings with the most important objective first.
+- Include a role only when domain expertise changes the expected answer.
+- State whether browsing, code execution, file inspection, image generation, or connected
+  apps are required; do not assume those capabilities are available.
+- For current or high-stakes claims, ask for verification and direct source links.
+- For coding tasks, include known runtime, framework, version, repository, and verification
+  commands without inventing missing values.
+- For generative work, include examples only when the desired shape is otherwise ambiguous.
+- Define the answer structure in `## Output format`, including desired length and artifacts.
 
-Do not answer the user's request. Only rewrite it into the ChatGPT-optimized structure above.
+Only rewrite the request. Do not perform it.

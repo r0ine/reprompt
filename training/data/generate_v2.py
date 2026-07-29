@@ -3,7 +3,7 @@
 v1'deki sabit yapi sorununu cozer: her ornek farkli bir
 cikti yapisina, farkli zenginliklere sahip olur.
 
-12+ archetype (yapi sablonu) x 4 hedef profil x 10 dil x
+12+ archetype (yapi sablonu) x 9 hedef profil x 10 dil x
 degisken zenginlikler (soru, sistem promptu, bellek, varsayim...)
 ile benzersiz, cesitli (input, output) ciftleri uretir.
 
@@ -14,374 +14,1204 @@ Kullanim:
 
 from __future__ import annotations
 
-import json
 import hashlib
+import json
 import random
-import textwrap
-from datetime import datetime, timezone
 from pathlib import Path
 
 import click
 from rich.console import Console
-from rich.progress import Progress, SpinnerColumn, BarColumn, TextColumn
+from rich.progress import BarColumn, Progress, SpinnerColumn, TextColumn
+
+from clarify_prompt.prompts.types import TARGET_PROFILES
 
 console = Console()
 
 OUT_PATH = Path("training/datasets/raw/synthetic_v2.jsonl")
 
 LANGS = ["tr", "en", "de", "fr", "es", "pt", "ru", "ja", "zh", "ko"]
-TARGETS = ["claude-code", "chatgpt", "cursor", "generic"]
+TARGETS = list(TARGET_PROFILES)
 
-# ---------------------------------------------------------------------------
 # Konular — kategori bazinda organize
-# ---------------------------------------------------------------------------
 
 TOPIC_POOLS = {
     "frontend": {
-        "tr": ["login sayfasi", "kayit formu", "profil sayfasi", "dashboard",
-               "dark mode", "responsive tasarim", "form validasyonu", "modal dialog",
-               "tablo componenti", "drag and drop", "infinite scroll", "toast bildirimi",
-               "autocomplete", "skeleton loader", "progress bar", "animasyon",
-               "sidebar menu", "breadcrumb", "tab navigasyonu", "dosya yukleyici",
-               "tarih secici", "renk paleti", "avatar yukleme", "yorum kutusu"],
-        "en": ["login page", "registration form", "profile page", "dashboard layout",
-               "dark mode toggle", "responsive design", "form validation", "modal dialog",
-               "data table", "drag and drop", "infinite scroll", "toast notification",
-               "autocomplete input", "skeleton loader", "progress indicator", "CSS animation",
-               "sidebar navigation", "breadcrumb", "tab component", "file uploader",
-               "date picker", "color picker", "avatar upload", "comment box"],
-        "de": ["Anmeldeseite", "Registrierungsformular", "Profilseite", "Dashboard",
-               "Dunkelmodus", "Responsive Design", "Formularvalidierung", "Modaler Dialog",
-               "Datentabelle", "Drag and Drop", "Endlos-Scrollen", "Toast-Benachrichtigung",
-               "Autovervollstaendigung", "Skeleton-Loader", "Fortschrittsanzeige", "Animation"],
-        "fr": ["page de connexion", "formulaire d'inscription", "page de profil", "tableau de bord",
-               "mode sombre", "design responsive", "validation de formulaire", "boite modale",
-               "table de donnees", "glisser-deposer", "defilement infini", "notification toast",
-               "autocompletion", "indicateur de progression", "selecteur de date", "navigation laterale"],
-        "es": ["pagina de login", "formulario de registro", "pagina de perfil", "tablero",
-               "modo oscuro", "diseno responsivo", "validacion de formulario", "dialogo modal",
-               "tabla de datos", "arrastrar y soltar", "scroll infinito", "notificacion emergente",
-               "autocompletado", "indicador de progreso", "selector de fecha", "navegacion lateral"],
-        "pt": ["pagina de login", "formulario de cadastro", "pagina de perfil", "painel",
-               "modo escuro", "design responsivo", "validacao de formulario", "dialogo modal",
-               "tabela de dados", "arrastar e soltar", "rolagem infinita", "notificacao toast",
-               "autocompletar", "indicador de progresso", "seletor de data", "navegacao lateral"],
-        "ru": ["stranica vhoda", "forma registracii", "stranica profilja", "panel upravlenija",
-               "temnaja tema", "adaptivnyj dizajn", "validacija formy", "modalnoe okno",
-               "tablica dannyh", "peretaskivanie", "beskonechnaja prokrutka", "vsplyvajuschee uvedomlenie"],
-        "ja": ["roguin peeji", "touroku foomu", "purofiru peeji", "dasshubodo",
-               "daaku moodo", "resuponsibu dezain", "foomu barideshon", "moodaru daiaorogu",
-               "deeta teeburu", "doragu ando doroppu", "mugen sukurooru", "toosuto tsuuchi"],
-        "zh": ["denglu yemian", "zhuce biaoduan", "geren ziliao ye", "yibiao pan",
-               "an se moshi", "xiangying shi sheji", "biaodan yanzheng", "motai kuang",
-               "shuju biao", "tuozhuai", "wuxian gundong", "tanchu tongzhi"],
-        "ko": ["roguin peiji", "deungnok pom", "peuropil peiji", "daesibodeu",
-               "dakeu modeu", "baneunghyeong dijain", "pom yuhyoseong geomsa", "modal daiallogeu",
-               "deiteo teibul", "deuraegeu aen deulop", "muhanjeongseo seukeulol", "toseuteu alrim"],
+        "tr": [
+            "login sayfasi",
+            "kayit formu",
+            "profil sayfasi",
+            "dashboard",
+            "dark mode",
+            "responsive tasarim",
+            "form validasyonu",
+            "modal dialog",
+            "tablo componenti",
+            "drag and drop",
+            "infinite scroll",
+            "toast bildirimi",
+            "autocomplete",
+            "skeleton loader",
+            "progress bar",
+            "animasyon",
+            "sidebar menu",
+            "breadcrumb",
+            "tab navigasyonu",
+            "dosya yukleyici",
+            "tarih secici",
+            "renk paleti",
+            "avatar yukleme",
+            "yorum kutusu",
+        ],
+        "en": [
+            "login page",
+            "registration form",
+            "profile page",
+            "dashboard layout",
+            "dark mode toggle",
+            "responsive design",
+            "form validation",
+            "modal dialog",
+            "data table",
+            "drag and drop",
+            "infinite scroll",
+            "toast notification",
+            "autocomplete input",
+            "skeleton loader",
+            "progress indicator",
+            "CSS animation",
+            "sidebar navigation",
+            "breadcrumb",
+            "tab component",
+            "file uploader",
+            "date picker",
+            "color picker",
+            "avatar upload",
+            "comment box",
+        ],
+        "de": [
+            "Anmeldeseite",
+            "Registrierungsformular",
+            "Profilseite",
+            "Dashboard",
+            "Dunkelmodus",
+            "Responsive Design",
+            "Formularvalidierung",
+            "Modaler Dialog",
+            "Datentabelle",
+            "Drag and Drop",
+            "Endlos-Scrollen",
+            "Toast-Benachrichtigung",
+            "Autovervollstaendigung",
+            "Skeleton-Loader",
+            "Fortschrittsanzeige",
+            "Animation",
+        ],
+        "fr": [
+            "page de connexion",
+            "formulaire d'inscription",
+            "page de profil",
+            "tableau de bord",
+            "mode sombre",
+            "design responsive",
+            "validation de formulaire",
+            "boite modale",
+            "table de donnees",
+            "glisser-deposer",
+            "defilement infini",
+            "notification toast",
+            "autocompletion",
+            "indicateur de progression",
+            "selecteur de date",
+            "navigation laterale",
+        ],
+        "es": [
+            "pagina de login",
+            "formulario de registro",
+            "pagina de perfil",
+            "tablero",
+            "modo oscuro",
+            "diseno responsivo",
+            "validacion de formulario",
+            "dialogo modal",
+            "tabla de datos",
+            "arrastrar y soltar",
+            "scroll infinito",
+            "notificacion emergente",
+            "autocompletado",
+            "indicador de progreso",
+            "selector de fecha",
+            "navegacion lateral",
+        ],
+        "pt": [
+            "pagina de login",
+            "formulario de cadastro",
+            "pagina de perfil",
+            "painel",
+            "modo escuro",
+            "design responsivo",
+            "validacao de formulario",
+            "dialogo modal",
+            "tabela de dados",
+            "arrastar e soltar",
+            "rolagem infinita",
+            "notificacao toast",
+            "autocompletar",
+            "indicador de progresso",
+            "seletor de data",
+            "navegacao lateral",
+        ],
+        "ru": [
+            "stranica vhoda",
+            "forma registracii",
+            "stranica profilja",
+            "panel upravlenija",
+            "temnaja tema",
+            "adaptivnyj dizajn",
+            "validacija formy",
+            "modalnoe okno",
+            "tablica dannyh",
+            "peretaskivanie",
+            "beskonechnaja prokrutka",
+            "vsplyvajuschee uvedomlenie",
+        ],
+        "ja": [
+            "roguin peeji",
+            "touroku foomu",
+            "purofiru peeji",
+            "dasshubodo",
+            "daaku moodo",
+            "resuponsibu dezain",
+            "foomu barideshon",
+            "moodaru daiaorogu",
+            "deeta teeburu",
+            "doragu ando doroppu",
+            "mugen sukurooru",
+            "toosuto tsuuchi",
+        ],
+        "zh": [
+            "denglu yemian",
+            "zhuce biaoduan",
+            "geren ziliao ye",
+            "yibiao pan",
+            "an se moshi",
+            "xiangying shi sheji",
+            "biaodan yanzheng",
+            "motai kuang",
+            "shuju biao",
+            "tuozhuai",
+            "wuxian gundong",
+            "tanchu tongzhi",
+        ],
+        "ko": [
+            "roguin peiji",
+            "deungnok pom",
+            "peuropil peiji",
+            "daesibodeu",
+            "dakeu modeu",
+            "baneunghyeong dijain",
+            "pom yuhyoseong geomsa",
+            "modal daiallogeu",
+            "deiteo teibul",
+            "deuraegeu aen deulop",
+            "muhanjeongseo seukeulol",
+            "toseuteu alrim",
+        ],
     },
     "backend": {
-        "tr": ["REST endpoint", "GraphQL schema", "websocket baglantisi", "kuyruk sistemi",
-               "cache katmani", "rate limiter", "health check", "logging sistemi",
-               "cron job", "webhook handler", "dosya depolama", "e-posta gonderici",
-               "veritabani migration", "seed data", "ORM modeli", "middleware",
-               "background worker", "event bus", "API gateway", "servis kesfedici"],
-        "en": ["REST API endpoint", "GraphQL resolver", "websocket connection", "message queue",
-               "cache layer", "rate limiter", "health check endpoint", "structured logging",
-               "cron scheduler", "webhook handler", "file storage service", "email sender",
-               "database migration", "seed data script", "ORM model", "middleware",
-               "background worker", "event bus", "API gateway", "service discovery"],
-        "de": ["REST-API-Endpunkt", "GraphQL-Resolver", "WebSocket-Verbindung", "Nachrichtenwarteschlange",
-               "Cache-Schicht", "Ratenbegrenzung", "Gesundheitscheck", "Protokollierung",
-               "Cron-Scheduler", "Webhook-Handler", "Dateispeicher", "E-Mail-Versand",
-               "Datenbankumstellung", "ORM-Modell", "Middleware", "Hintergrundarbeiter"],
-        "fr": ["endpoint REST", "resolveur GraphQL", "connexion WebSocket", "file de messages",
-               "couche de cache", "limiteur de debit", "verification de sante", "journalisation",
-               "planificateur cron", "gestionnaire de webhook", "stockage de fichiers", "envoi d'email",
-               "migration de base de donnees", "modele ORM", "middleware", "worker en arriere-plan"],
-        "es": ["endpoint REST", "resolvedor GraphQL", "conexion WebSocket", "cola de mensajes",
-               "capa de cache", "limitador de velocidad", "verificacion de estado", "registro estructurado",
-               "planificador cron", "manejador de webhook", "almacenamiento de archivos", "envio de email",
-               "migracion de base de datos", "modelo ORM", "middleware", "worker en segundo plano"],
-        "pt": ["endpoint REST", "resolver GraphQL", "conexao WebSocket", "fila de mensagens",
-               "camada de cache", "limitador de taxa", "verificacao de saude", "registro estruturado",
-               "agendador cron", "manipulador de webhook", "armazenamento de arquivos", "envio de email",
-               "migracao de banco de dados", "modelo ORM", "middleware", "worker em segundo plano"],
-        "ru": ["REST endpoynt", "GraphQL rezolver", "WebSocket-soedinenie", "ochered soobschenij",
-               "sloj keshirovanija", "ogranichitel skorosti", "proverka zdorovja", "strukturirovannoe zhurnalirovanie",
-               "cron planirovschik", "obrabotchik webhookov", "fajlovoe hranilische", "otpravka email"],
-        "ja": ["REST endopointo", "GraphQL rizorubaa", "WebSocket setsuzoku", "messeeji kyuu",
-               "kyasshu reiyaa", "reeto rimitaa", "herusu chekku", "rogingu shisutemu",
-               "kuron sukejuuraa", "webhook handoraa", "fairu sutoreji", "meeru soushin"],
-        "zh": ["REST duankou", "GraphQL jiexi qi", "WebSocket lianjie", "xiaoxi duilie",
-               "huancun ceng", "sudu xianzhi qi", "jiankang jiancha", "jiegohua rizhi",
-               "dingshi renwu", "webhook chuliqì", "wenjian cunchu", "youjian fasong"],
-        "ko": ["REST endeupoindeu", "GraphQL rijeolbeo", "WebSocket yeongyeol", "mesiji kyu",
-               "kaesi gyecheung", "soddo jeghan gi", "sangtae hwanin", "gujojeok roging",
-               "keuron seukejulleo", "webhook haendeuleo", "pail jeojangso", "imeil balsong"],
+        "tr": [
+            "REST endpoint",
+            "GraphQL schema",
+            "websocket baglantisi",
+            "kuyruk sistemi",
+            "cache katmani",
+            "rate limiter",
+            "health check",
+            "logging sistemi",
+            "cron job",
+            "webhook handler",
+            "dosya depolama",
+            "e-posta gonderici",
+            "veritabani migration",
+            "seed data",
+            "ORM modeli",
+            "middleware",
+            "background worker",
+            "event bus",
+            "API gateway",
+            "servis kesfedici",
+        ],
+        "en": [
+            "REST API endpoint",
+            "GraphQL resolver",
+            "websocket connection",
+            "message queue",
+            "cache layer",
+            "rate limiter",
+            "health check endpoint",
+            "structured logging",
+            "cron scheduler",
+            "webhook handler",
+            "file storage service",
+            "email sender",
+            "database migration",
+            "seed data script",
+            "ORM model",
+            "middleware",
+            "background worker",
+            "event bus",
+            "API gateway",
+            "service discovery",
+        ],
+        "de": [
+            "REST-API-Endpunkt",
+            "GraphQL-Resolver",
+            "WebSocket-Verbindung",
+            "Nachrichtenwarteschlange",
+            "Cache-Schicht",
+            "Ratenbegrenzung",
+            "Gesundheitscheck",
+            "Protokollierung",
+            "Cron-Scheduler",
+            "Webhook-Handler",
+            "Dateispeicher",
+            "E-Mail-Versand",
+            "Datenbankumstellung",
+            "ORM-Modell",
+            "Middleware",
+            "Hintergrundarbeiter",
+        ],
+        "fr": [
+            "endpoint REST",
+            "resolveur GraphQL",
+            "connexion WebSocket",
+            "file de messages",
+            "couche de cache",
+            "limiteur de debit",
+            "verification de sante",
+            "journalisation",
+            "planificateur cron",
+            "gestionnaire de webhook",
+            "stockage de fichiers",
+            "envoi d'email",
+            "migration de base de donnees",
+            "modele ORM",
+            "middleware",
+            "worker en arriere-plan",
+        ],
+        "es": [
+            "endpoint REST",
+            "resolvedor GraphQL",
+            "conexion WebSocket",
+            "cola de mensajes",
+            "capa de cache",
+            "limitador de velocidad",
+            "verificacion de estado",
+            "registro estructurado",
+            "planificador cron",
+            "manejador de webhook",
+            "almacenamiento de archivos",
+            "envio de email",
+            "migracion de base de datos",
+            "modelo ORM",
+            "middleware",
+            "worker en segundo plano",
+        ],
+        "pt": [
+            "endpoint REST",
+            "resolver GraphQL",
+            "conexao WebSocket",
+            "fila de mensagens",
+            "camada de cache",
+            "limitador de taxa",
+            "verificacao de saude",
+            "registro estruturado",
+            "agendador cron",
+            "manipulador de webhook",
+            "armazenamento de arquivos",
+            "envio de email",
+            "migracao de banco de dados",
+            "modelo ORM",
+            "middleware",
+            "worker em segundo plano",
+        ],
+        "ru": [
+            "REST endpoynt",
+            "GraphQL rezolver",
+            "WebSocket-soedinenie",
+            "ochered soobschenij",
+            "sloj keshirovanija",
+            "ogranichitel skorosti",
+            "proverka zdorovja",
+            "strukturirovannoe zhurnalirovanie",
+            "cron planirovschik",
+            "obrabotchik webhookov",
+            "fajlovoe hranilische",
+            "otpravka email",
+        ],
+        "ja": [
+            "REST endopointo",
+            "GraphQL rizorubaa",
+            "WebSocket setsuzoku",
+            "messeeji kyuu",
+            "kyasshu reiyaa",
+            "reeto rimitaa",
+            "herusu chekku",
+            "rogingu shisutemu",
+            "kuron sukejuuraa",
+            "webhook handoraa",
+            "fairu sutoreji",
+            "meeru soushin",
+        ],
+        "zh": [
+            "REST duankou",
+            "GraphQL jiexi qi",
+            "WebSocket lianjie",
+            "xiaoxi duilie",
+            "huancun ceng",
+            "sudu xianzhi qi",
+            "jiankang jiancha",
+            "jiegohua rizhi",
+            "dingshi renwu",
+            "webhook chuliqì",
+            "wenjian cunchu",
+            "youjian fasong",
+        ],
+        "ko": [
+            "REST endeupoindeu",
+            "GraphQL rijeolbeo",
+            "WebSocket yeongyeol",
+            "mesiji kyu",
+            "kaesi gyecheung",
+            "soddo jeghan gi",
+            "sangtae hwanin",
+            "gujojeok roging",
+            "keuron seukejulleo",
+            "webhook haendeuleo",
+            "pail jeojangso",
+            "imeil balsong",
+        ],
     },
     "devops": {
-        "tr": ["CI/CD pipeline", "Docker container", "nginx reverse proxy", "Kubernetes deployment",
-               "monitoring dashboard", "alert sistemi", "log aggregation", "secret management",
-               "load balancer", "auto-scaling", "backup stratejisi", "rollback mekanizmasi"],
-        "en": ["CI/CD pipeline", "Docker containerization", "nginx reverse proxy", "Kubernetes deployment",
-               "monitoring setup", "alerting system", "log aggregation", "secrets management",
-               "load balancer config", "auto-scaling policy", "backup strategy", "rollback mechanism"],
-        "de": ["CI/CD-Pipeline", "Docker-Containerisierung", "Nginx-Reverse-Proxy", "Kubernetes-Bereitstellung",
-               "Monitoring-Einrichtung", "Alarmsystem", "Log-Aggregation", "Geheimnisverwaltung"],
-        "fr": ["pipeline CI/CD", "conteneurisation Docker", "proxy inverse Nginx", "deploiement Kubernetes",
-               "configuration monitoring", "systeme d'alerte", "aggregation de logs", "gestion des secrets"],
-        "es": ["pipeline CI/CD", "contenerizacion Docker", "proxy inverso Nginx", "despliegue Kubernetes",
-               "configuracion de monitoreo", "sistema de alertas", "agregacion de logs", "gestion de secretos"],
-        "pt": ["pipeline CI/CD", "contenerizacao Docker", "proxy reverso Nginx", "deploy Kubernetes",
-               "configuracao de monitoramento", "sistema de alertas", "agregacao de logs", "gestao de segredos"],
-        "ru": ["CI/CD konvejer", "Docker kontejnerizacija", "Nginx obratnyj proksi", "Kubernetes razvertyvanie",
-               "nastrojka monitoringa", "sistema opoveschenij", "agregacija logov", "upravlenie sekretami"],
-        "ja": ["CI/CD paipurain", "Docker kontena", "Nginx ribaasu purokishi", "Kubernetes deburoi",
-               "monitaringu", "araato shisutemu", "rogu shuuyaku", "shiikuretto kanri"],
-        "zh": ["CI/CD liushuixian", "Docker rongqi hua", "Nginx fan xiang daili", "Kubernetes bushu",
-               "jiankong peizhi", "gaojing xitong", "rizhi juhe", "miyao guanli"],
-        "ko": ["CI/CD paipeurain", "Docker keonteineo hwa", "Nginx yeog-banghyang peuloksi", "Kubernetes baepho",
-               "moniteoling seoljeong", "alrim siseutem", "logeu jipgye", "bimilbeon gwanli"],
+        "tr": [
+            "CI/CD pipeline",
+            "Docker container",
+            "nginx reverse proxy",
+            "Kubernetes deployment",
+            "monitoring dashboard",
+            "alert sistemi",
+            "log aggregation",
+            "secret management",
+            "load balancer",
+            "auto-scaling",
+            "backup stratejisi",
+            "rollback mekanizmasi",
+        ],
+        "en": [
+            "CI/CD pipeline",
+            "Docker containerization",
+            "nginx reverse proxy",
+            "Kubernetes deployment",
+            "monitoring setup",
+            "alerting system",
+            "log aggregation",
+            "secrets management",
+            "load balancer config",
+            "auto-scaling policy",
+            "backup strategy",
+            "rollback mechanism",
+        ],
+        "de": [
+            "CI/CD-Pipeline",
+            "Docker-Containerisierung",
+            "Nginx-Reverse-Proxy",
+            "Kubernetes-Bereitstellung",
+            "Monitoring-Einrichtung",
+            "Alarmsystem",
+            "Log-Aggregation",
+            "Geheimnisverwaltung",
+        ],
+        "fr": [
+            "pipeline CI/CD",
+            "conteneurisation Docker",
+            "proxy inverse Nginx",
+            "deploiement Kubernetes",
+            "configuration monitoring",
+            "systeme d'alerte",
+            "aggregation de logs",
+            "gestion des secrets",
+        ],
+        "es": [
+            "pipeline CI/CD",
+            "contenerizacion Docker",
+            "proxy inverso Nginx",
+            "despliegue Kubernetes",
+            "configuracion de monitoreo",
+            "sistema de alertas",
+            "agregacion de logs",
+            "gestion de secretos",
+        ],
+        "pt": [
+            "pipeline CI/CD",
+            "contenerizacao Docker",
+            "proxy reverso Nginx",
+            "deploy Kubernetes",
+            "configuracao de monitoramento",
+            "sistema de alertas",
+            "agregacao de logs",
+            "gestao de segredos",
+        ],
+        "ru": [
+            "CI/CD konvejer",
+            "Docker kontejnerizacija",
+            "Nginx obratnyj proksi",
+            "Kubernetes razvertyvanie",
+            "nastrojka monitoringa",
+            "sistema opoveschenij",
+            "agregacija logov",
+            "upravlenie sekretami",
+        ],
+        "ja": [
+            "CI/CD paipurain",
+            "Docker kontena",
+            "Nginx ribaasu purokishi",
+            "Kubernetes deburoi",
+            "monitaringu",
+            "araato shisutemu",
+            "rogu shuuyaku",
+            "shiikuretto kanri",
+        ],
+        "zh": [
+            "CI/CD liushuixian",
+            "Docker rongqi hua",
+            "Nginx fan xiang daili",
+            "Kubernetes bushu",
+            "jiankong peizhi",
+            "gaojing xitong",
+            "rizhi juhe",
+            "miyao guanli",
+        ],
+        "ko": [
+            "CI/CD paipeurain",
+            "Docker keonteineo hwa",
+            "Nginx yeog-banghyang peuloksi",
+            "Kubernetes baepho",
+            "moniteoling seoljeong",
+            "alrim siseutem",
+            "logeu jipgye",
+            "bimilbeon gwanli",
+        ],
     },
     "security": {
-        "tr": ["OAuth entegrasyonu", "JWT token yonetimi", "RBAC yetkilendirme", "CSRF korumasi",
-               "XSS onleme", "SQL injection korumasi", "rate limiting", "guvenlik audit",
-               "sifre politikasi", "iki faktorlu dogrulama", "IP engelleme", "SSL sertifikasi"],
-        "en": ["OAuth integration", "JWT token management", "RBAC authorization", "CSRF protection",
-               "XSS prevention", "SQL injection guard", "rate limiting", "security audit",
-               "password policy", "two-factor auth", "IP blocking", "SSL certificate setup"],
-        "de": ["OAuth-Integration", "JWT-Token-Verwaltung", "RBAC-Autorisierung", "CSRF-Schutz",
-               "XSS-Praevention", "SQL-Injection-Schutz", "Sicherheitsaudit", "Passwortrichtlinie"],
-        "fr": ["integration OAuth", "gestion des jetons JWT", "autorisation RBAC", "protection CSRF",
-               "prevention XSS", "protection injection SQL", "audit de securite", "politique de mot de passe"],
-        "es": ["integracion OAuth", "gestion de tokens JWT", "autorizacion RBAC", "proteccion CSRF",
-               "prevencion XSS", "proteccion contra inyeccion SQL", "auditoria de seguridad", "politica de contrasenas"],
-        "pt": ["integracao OAuth", "gestao de tokens JWT", "autorizacao RBAC", "protecao CSRF",
-               "prevencao XSS", "protecao contra SQL injection", "auditoria de seguranca", "politica de senhas"],
-        "ru": ["OAuth integracija", "upravlenie JWT tokenami", "RBAC avtorizacija", "zaschita ot CSRF",
-               "predotvrashchenie XSS", "zaschita ot SQL injekcij", "audit bezopasnosti", "politika parolej"],
-        "ja": ["OAuth tougou", "JWT tookun kanri", "RBAC kengen kanri", "CSRF bougyo",
-               "XSS boushi", "SQL injekushon taisaku", "sekyuriti kansa", "pasuwado porishi"],
-        "zh": ["OAuth jicheng", "JWT lingpai guanli", "RBAC shouquan", "CSRF fanghu",
-               "XSS fangfan", "SQL zhuru fanghu", "anquan shenji", "mima celue"],
-        "ko": ["OAuth tonghap", "JWT tokun gwanli", "RBAC gwonhan", "CSRF bangeo",
-               "XSS bangjji", "SQL injeksyeon bangeo", "boan gamsa", "bimilbeonho jeongchaek"],
+        "tr": [
+            "OAuth entegrasyonu",
+            "JWT token yonetimi",
+            "RBAC yetkilendirme",
+            "CSRF korumasi",
+            "XSS onleme",
+            "SQL injection korumasi",
+            "rate limiting",
+            "guvenlik audit",
+            "sifre politikasi",
+            "iki faktorlu dogrulama",
+            "IP engelleme",
+            "SSL sertifikasi",
+        ],
+        "en": [
+            "OAuth integration",
+            "JWT token management",
+            "RBAC authorization",
+            "CSRF protection",
+            "XSS prevention",
+            "SQL injection guard",
+            "rate limiting",
+            "security audit",
+            "password policy",
+            "two-factor auth",
+            "IP blocking",
+            "SSL certificate setup",
+        ],
+        "de": [
+            "OAuth-Integration",
+            "JWT-Token-Verwaltung",
+            "RBAC-Autorisierung",
+            "CSRF-Schutz",
+            "XSS-Praevention",
+            "SQL-Injection-Schutz",
+            "Sicherheitsaudit",
+            "Passwortrichtlinie",
+        ],
+        "fr": [
+            "integration OAuth",
+            "gestion des jetons JWT",
+            "autorisation RBAC",
+            "protection CSRF",
+            "prevention XSS",
+            "protection injection SQL",
+            "audit de securite",
+            "politique de mot de passe",
+        ],
+        "es": [
+            "integracion OAuth",
+            "gestion de tokens JWT",
+            "autorizacion RBAC",
+            "proteccion CSRF",
+            "prevencion XSS",
+            "proteccion contra inyeccion SQL",
+            "auditoria de seguridad",
+            "politica de contrasenas",
+        ],
+        "pt": [
+            "integracao OAuth",
+            "gestao de tokens JWT",
+            "autorizacao RBAC",
+            "protecao CSRF",
+            "prevencao XSS",
+            "protecao contra SQL injection",
+            "auditoria de seguranca",
+            "politica de senhas",
+        ],
+        "ru": [
+            "OAuth integracija",
+            "upravlenie JWT tokenami",
+            "RBAC avtorizacija",
+            "zaschita ot CSRF",
+            "predotvrashchenie XSS",
+            "zaschita ot SQL injekcij",
+            "audit bezopasnosti",
+            "politika parolej",
+        ],
+        "ja": [
+            "OAuth tougou",
+            "JWT tookun kanri",
+            "RBAC kengen kanri",
+            "CSRF bougyo",
+            "XSS boushi",
+            "SQL injekushon taisaku",
+            "sekyuriti kansa",
+            "pasuwado porishi",
+        ],
+        "zh": [
+            "OAuth jicheng",
+            "JWT lingpai guanli",
+            "RBAC shouquan",
+            "CSRF fanghu",
+            "XSS fangfan",
+            "SQL zhuru fanghu",
+            "anquan shenji",
+            "mima celue",
+        ],
+        "ko": [
+            "OAuth tonghap",
+            "JWT tokun gwanli",
+            "RBAC gwonhan",
+            "CSRF bangeo",
+            "XSS bangjji",
+            "SQL injeksyeon bangeo",
+            "boan gamsa",
+            "bimilbeonho jeongchaek",
+        ],
     },
     "testing": {
-        "tr": ["unit test", "integration test", "e2e test", "test altyapisi",
-               "mock/stub olusturma", "test coverage", "snapshot test", "load test",
-               "regression test", "A/B test", "mutation test", "property-based test"],
-        "en": ["unit tests", "integration tests", "end-to-end tests", "test infrastructure",
-               "mock/stub setup", "test coverage report", "snapshot testing", "load testing",
-               "regression tests", "A/B testing framework", "mutation testing", "property-based testing"],
-        "de": ["Unit-Tests", "Integrationstests", "End-to-End-Tests", "Testinfrastruktur",
-               "Mock/Stub-Erstellung", "Testabdeckung", "Snapshot-Tests", "Lasttests"],
-        "fr": ["tests unitaires", "tests d'integration", "tests end-to-end", "infrastructure de test",
-               "creation de mocks", "couverture de test", "tests snapshot", "tests de charge"],
-        "es": ["pruebas unitarias", "pruebas de integracion", "pruebas end-to-end", "infraestructura de pruebas",
-               "creacion de mocks", "cobertura de pruebas", "pruebas de snapshot", "pruebas de carga"],
-        "pt": ["testes unitarios", "testes de integracao", "testes end-to-end", "infraestrutura de testes",
-               "criacao de mocks", "cobertura de testes", "testes de snapshot", "testes de carga"],
-        "ru": ["modul'nye testy", "integracionnye testy", "e2e testy", "testovaja infrastruktura",
-               "sozdanie mokov", "pokrytie testami", "snapshot testy", "nagruzochnye testy"],
-        "ja": ["yunitto tesuto", "tougou tesuto", "e2e tesuto", "tesuto infura",
-               "mokku sakusei", "tesuto kabarejji", "sunappushotto tesuto", "fuka tesuto"],
-        "zh": ["danwei ceshi", "jicheng ceshi", "duanduan ceshi", "ceshi jichu sheshi",
-               "mock chuangjian", "ceshi fugailv", "kuaizhao ceshi", "yali ceshi"],
-        "ko": ["yunit teseuteu", "tonghap teseuteu", "e2e teseuteu", "teseuteu infra",
-               "mog saengseong", "teseuteu keobeolijji", "seunaepsat teseuteu", "buhwa teseuteu"],
+        "tr": [
+            "unit test",
+            "integration test",
+            "e2e test",
+            "test altyapisi",
+            "mock/stub olusturma",
+            "test coverage",
+            "snapshot test",
+            "load test",
+            "regression test",
+            "A/B test",
+            "mutation test",
+            "property-based test",
+        ],
+        "en": [
+            "unit tests",
+            "integration tests",
+            "end-to-end tests",
+            "test infrastructure",
+            "mock/stub setup",
+            "test coverage report",
+            "snapshot testing",
+            "load testing",
+            "regression tests",
+            "A/B testing framework",
+            "mutation testing",
+            "property-based testing",
+        ],
+        "de": [
+            "Unit-Tests",
+            "Integrationstests",
+            "End-to-End-Tests",
+            "Testinfrastruktur",
+            "Mock/Stub-Erstellung",
+            "Testabdeckung",
+            "Snapshot-Tests",
+            "Lasttests",
+        ],
+        "fr": [
+            "tests unitaires",
+            "tests d'integration",
+            "tests end-to-end",
+            "infrastructure de test",
+            "creation de mocks",
+            "couverture de test",
+            "tests snapshot",
+            "tests de charge",
+        ],
+        "es": [
+            "pruebas unitarias",
+            "pruebas de integracion",
+            "pruebas end-to-end",
+            "infraestructura de pruebas",
+            "creacion de mocks",
+            "cobertura de pruebas",
+            "pruebas de snapshot",
+            "pruebas de carga",
+        ],
+        "pt": [
+            "testes unitarios",
+            "testes de integracao",
+            "testes end-to-end",
+            "infraestrutura de testes",
+            "criacao de mocks",
+            "cobertura de testes",
+            "testes de snapshot",
+            "testes de carga",
+        ],
+        "ru": [
+            "modul'nye testy",
+            "integracionnye testy",
+            "e2e testy",
+            "testovaja infrastruktura",
+            "sozdanie mokov",
+            "pokrytie testami",
+            "snapshot testy",
+            "nagruzochnye testy",
+        ],
+        "ja": [
+            "yunitto tesuto",
+            "tougou tesuto",
+            "e2e tesuto",
+            "tesuto infura",
+            "mokku sakusei",
+            "tesuto kabarejji",
+            "sunappushotto tesuto",
+            "fuka tesuto",
+        ],
+        "zh": [
+            "danwei ceshi",
+            "jicheng ceshi",
+            "duanduan ceshi",
+            "ceshi jichu sheshi",
+            "mock chuangjian",
+            "ceshi fugailv",
+            "kuaizhao ceshi",
+            "yali ceshi",
+        ],
+        "ko": [
+            "yunit teseuteu",
+            "tonghap teseuteu",
+            "e2e teseuteu",
+            "teseuteu infra",
+            "mog saengseong",
+            "teseuteu keobeolijji",
+            "seunaepsat teseuteu",
+            "buhwa teseuteu",
+        ],
     },
     "writing": {
-        "tr": ["blog yazisi", "teknik dokumantasyon", "API referansi", "hata raporu",
-               "toplanti ozeti", "proje ozeti", "release notu", "performans raporu",
-               "guvenlik degerlendirmesi", "sunum", "e-posta taslagi", "urun aciklamasi",
-               "test plani", "mimari karar belgesi", "kullanici kilavuzu", "changelog"],
-        "en": ["blog post", "technical documentation", "API reference", "bug report",
-               "meeting summary", "project brief", "release notes", "performance report",
-               "security assessment", "presentation", "email draft", "product description",
-               "test plan", "architecture decision record", "user guide", "changelog"],
-        "de": ["Blogbeitrag", "Technische Dokumentation", "API-Referenz", "Fehlerbericht",
-               "Besprechungsprotokoll", "Projektbeschreibung", "Release-Notizen", "Leistungsbericht",
-               "Sicherheitsbewertung", "Praesentation", "E-Mail-Entwurf", "Produktbeschreibung"],
-        "fr": ["article de blog", "documentation technique", "reference API", "rapport de bug",
-               "resume de reunion", "brief de projet", "notes de version", "rapport de performance",
-               "evaluation de securite", "presentation", "brouillon d'email", "description de produit"],
-        "es": ["articulo de blog", "documentacion tecnica", "referencia API", "informe de errores",
-               "resumen de reunion", "brief de proyecto", "notas de version", "informe de rendimiento",
-               "evaluacion de seguridad", "presentacion", "borrador de email", "descripcion de producto"],
-        "pt": ["artigo de blog", "documentacao tecnica", "referencia de API", "relatorio de bug",
-               "resumo de reuniao", "resumo do projeto", "notas de versao", "relatorio de desempenho",
-               "avaliacao de seguranca", "apresentacao", "rascunho de email", "descricao do produto"],
-        "ru": ["statja v blog", "tehnicheskaja dokumentacija", "spravka po API", "otchet ob oshibke",
-               "protokol soveschanija", "kratkoe opisanie proekta", "zametki o relize", "otchet o proizvoditelnosti"],
-        "ja": ["burogu kiji", "gijutsu dokyumento", "API refarensu", "bagu repooto",
-               "kaigi giyouroku", "purojekuto gaiyou", "ririisu nooto", "pafoomansu repooto"],
-        "zh": ["bowen", "jishu wendang", "API cankaoshu", "cuowu baogao",
-               "huiyi zongjie", "xiangmu jieshao", "banben shuoming", "xingneng baogao"],
-        "ko": ["beullogeu geul", "gisul munseo", "API chamjo", "beogeu bogoseo",
-               "hoeui yoyak", "peurojekteu gaeyo", "riliseu noteu", "seongnong bogoseo"],
+        "tr": [
+            "blog yazisi",
+            "teknik dokumantasyon",
+            "API referansi",
+            "hata raporu",
+            "toplanti ozeti",
+            "proje ozeti",
+            "release notu",
+            "performans raporu",
+            "guvenlik degerlendirmesi",
+            "sunum",
+            "e-posta taslagi",
+            "urun aciklamasi",
+            "test plani",
+            "mimari karar belgesi",
+            "kullanici kilavuzu",
+            "changelog",
+        ],
+        "en": [
+            "blog post",
+            "technical documentation",
+            "API reference",
+            "bug report",
+            "meeting summary",
+            "project brief",
+            "release notes",
+            "performance report",
+            "security assessment",
+            "presentation",
+            "email draft",
+            "product description",
+            "test plan",
+            "architecture decision record",
+            "user guide",
+            "changelog",
+        ],
+        "de": [
+            "Blogbeitrag",
+            "Technische Dokumentation",
+            "API-Referenz",
+            "Fehlerbericht",
+            "Besprechungsprotokoll",
+            "Projektbeschreibung",
+            "Release-Notizen",
+            "Leistungsbericht",
+            "Sicherheitsbewertung",
+            "Praesentation",
+            "E-Mail-Entwurf",
+            "Produktbeschreibung",
+        ],
+        "fr": [
+            "article de blog",
+            "documentation technique",
+            "reference API",
+            "rapport de bug",
+            "resume de reunion",
+            "brief de projet",
+            "notes de version",
+            "rapport de performance",
+            "evaluation de securite",
+            "presentation",
+            "brouillon d'email",
+            "description de produit",
+        ],
+        "es": [
+            "articulo de blog",
+            "documentacion tecnica",
+            "referencia API",
+            "informe de errores",
+            "resumen de reunion",
+            "brief de proyecto",
+            "notas de version",
+            "informe de rendimiento",
+            "evaluacion de seguridad",
+            "presentacion",
+            "borrador de email",
+            "descripcion de producto",
+        ],
+        "pt": [
+            "artigo de blog",
+            "documentacao tecnica",
+            "referencia de API",
+            "relatorio de bug",
+            "resumo de reuniao",
+            "resumo do projeto",
+            "notas de versao",
+            "relatorio de desempenho",
+            "avaliacao de seguranca",
+            "apresentacao",
+            "rascunho de email",
+            "descricao do produto",
+        ],
+        "ru": [
+            "statja v blog",
+            "tehnicheskaja dokumentacija",
+            "spravka po API",
+            "otchet ob oshibke",
+            "protokol soveschanija",
+            "kratkoe opisanie proekta",
+            "zametki o relize",
+            "otchet o proizvoditelnosti",
+        ],
+        "ja": [
+            "burogu kiji",
+            "gijutsu dokyumento",
+            "API refarensu",
+            "bagu repooto",
+            "kaigi giyouroku",
+            "purojekuto gaiyou",
+            "ririisu nooto",
+            "pafoomansu repooto",
+        ],
+        "zh": [
+            "bowen",
+            "jishu wendang",
+            "API cankaoshu",
+            "cuowu baogao",
+            "huiyi zongjie",
+            "xiangmu jieshao",
+            "banben shuoming",
+            "xingneng baogao",
+        ],
+        "ko": [
+            "beullogeu geul",
+            "gisul munseo",
+            "API chamjo",
+            "beogeu bogoseo",
+            "hoeui yoyak",
+            "peurojekteu gaeyo",
+            "riliseu noteu",
+            "seongnong bogoseo",
+        ],
     },
 }
 
-# ---------------------------------------------------------------------------
 # Ham prompt sablonlari — konusma tarzi cesitleri
-# ---------------------------------------------------------------------------
 
 RAW_STYLES = {
     "terse": {
-        "tr": ["{topic} yap", "{topic} ekle", "{topic} duzelt", "{topic} olustur",
-               "bi {topic} lazim", "{topic} kaldir", "{topic} calistir"],
-        "en": ["make {topic}", "add {topic}", "fix {topic}", "create {topic}",
-               "need {topic}", "remove {topic}", "setup {topic}"],
-        "de": ["{topic} erstellen", "{topic} reparieren", "{topic} hinzufuegen",
-               "brauche {topic}", "{topic} entfernen"],
-        "fr": ["creer {topic}", "corriger {topic}", "ajouter {topic}",
-               "besoin de {topic}", "supprimer {topic}"],
-        "es": ["crear {topic}", "arreglar {topic}", "agregar {topic}",
-               "necesito {topic}", "eliminar {topic}"],
-        "pt": ["criar {topic}", "corrigir {topic}", "adicionar {topic}",
-               "preciso de {topic}", "remover {topic}"],
-        "ru": ["sdelaj {topic}", "pochini {topic}", "dobav {topic}",
-               "nuzhen {topic}", "uberi {topic}"],
-        "ja": ["{topic} tsukutte", "{topic} naoshite", "{topic} tsuika shite",
-               "{topic} hitsuyou", "{topic} keshite"],
-        "zh": ["zuo {topic}", "xiufu {topic}", "tianjia {topic}",
-               "xuyao {topic}", "shanchu {topic}"],
-        "ko": ["{topic} mandeulgi", "{topic} gochigi", "{topic} chuga",
-               "{topic} pilyohabnida", "{topic} sakje"],
+        "tr": [
+            "{topic} yap",
+            "{topic} ekle",
+            "{topic} duzelt",
+            "{topic} olustur",
+            "bi {topic} lazim",
+            "{topic} kaldir",
+            "{topic} calistir",
+        ],
+        "en": [
+            "make {topic}",
+            "add {topic}",
+            "fix {topic}",
+            "create {topic}",
+            "need {topic}",
+            "remove {topic}",
+            "setup {topic}",
+        ],
+        "de": [
+            "{topic} erstellen",
+            "{topic} reparieren",
+            "{topic} hinzufuegen",
+            "brauche {topic}",
+            "{topic} entfernen",
+        ],
+        "fr": [
+            "creer {topic}",
+            "corriger {topic}",
+            "ajouter {topic}",
+            "besoin de {topic}",
+            "supprimer {topic}",
+        ],
+        "es": [
+            "crear {topic}",
+            "arreglar {topic}",
+            "agregar {topic}",
+            "necesito {topic}",
+            "eliminar {topic}",
+        ],
+        "pt": [
+            "criar {topic}",
+            "corrigir {topic}",
+            "adicionar {topic}",
+            "preciso de {topic}",
+            "remover {topic}",
+        ],
+        "ru": [
+            "sdelaj {topic}",
+            "pochini {topic}",
+            "dobav {topic}",
+            "nuzhen {topic}",
+            "uberi {topic}",
+        ],
+        "ja": [
+            "{topic} tsukutte",
+            "{topic} naoshite",
+            "{topic} tsuika shite",
+            "{topic} hitsuyou",
+            "{topic} keshite",
+        ],
+        "zh": [
+            "zuo {topic}",
+            "xiufu {topic}",
+            "tianjia {topic}",
+            "xuyao {topic}",
+            "shanchu {topic}",
+        ],
+        "ko": [
+            "{topic} mandeulgi",
+            "{topic} gochigi",
+            "{topic} chuga",
+            "{topic} pilyohabnida",
+            "{topic} sakje",
+        ],
     },
     "frustrated": {
-        "tr": ["{topic} calismiyor duzelt", "{topic} patladi", "su {topic} bozuk",
-               "{topic} kodu cok cirkin", "{topic} hata veriyor bak",
-               "{topic} yine bozuldu ya", "gene {topic} patlamis", "{topic} ne bicim bu"],
-        "en": ["{topic} is broken fix it", "{topic} crashed again", "the {topic} is buggy",
-               "{topic} code is a mess", "{topic} keeps throwing errors",
-               "{topic} broke again ffs", "why is {topic} so slow", "{topic} sucks fix it"],
-        "de": ["{topic} funktioniert nicht mehr", "{topic} ist abgestuerzt", "{topic} ist fehlerhaft",
-               "{topic} Code ist chaotisch", "{topic} wirft staendig Fehler"],
-        "fr": ["{topic} ne fonctionne plus", "{topic} a plante", "{topic} est buggue",
-               "le code de {topic} est un desastre", "{topic} lance des erreurs tout le temps"],
-        "es": ["{topic} no funciona", "{topic} se cayo otra vez", "{topic} tiene errores",
-               "el codigo de {topic} es un desastre", "{topic} lanza errores constantemente"],
-        "pt": ["{topic} parou de funcionar", "{topic} travou de novo", "{topic} esta com bug",
-               "o codigo do {topic} ta horrivel", "{topic} da erro toda hora"],
-        "ru": ["{topic} ne rabotaet pochini", "{topic} opyat slomalsja", "{topic} gljuchit",
-               "kod {topic} uzhasen", "{topic} postojanno vydaet oshibki"],
-        "ja": ["{topic} ugokimasen naoshite", "{topic} kurasshu shita", "{topic} bagu darake",
-               "{topic} koodo kitanai", "{topic} eraa bakari deru"],
-        "zh": ["{topic} huaile xiufu yixia", "{topic} bengkui le", "{topic} you bug",
-               "{topic} daima hen luan", "{topic} yizhi baocuo"],
-        "ko": ["{topic} i jakdonghaji anseumnida", "{topic} i chungdol haesseumnida", "{topic} e beogeu isseoyo",
-               "{topic} kodeu eojileowoyo", "{topic} gyesok eleo naseubnida"],
+        "tr": [
+            "{topic} calismiyor duzelt",
+            "{topic} patladi",
+            "su {topic} bozuk",
+            "{topic} kodu cok cirkin",
+            "{topic} hata veriyor bak",
+            "{topic} yine bozuldu ya",
+            "gene {topic} patlamis",
+            "{topic} ne bicim bu",
+        ],
+        "en": [
+            "{topic} is broken fix it",
+            "{topic} crashed again",
+            "the {topic} is buggy",
+            "{topic} code is a mess",
+            "{topic} keeps throwing errors",
+            "{topic} broke again ffs",
+            "why is {topic} so slow",
+            "{topic} sucks fix it",
+        ],
+        "de": [
+            "{topic} funktioniert nicht mehr",
+            "{topic} ist abgestuerzt",
+            "{topic} ist fehlerhaft",
+            "{topic} Code ist chaotisch",
+            "{topic} wirft staendig Fehler",
+        ],
+        "fr": [
+            "{topic} ne fonctionne plus",
+            "{topic} a plante",
+            "{topic} est buggue",
+            "le code de {topic} est un desastre",
+            "{topic} lance des erreurs tout le temps",
+        ],
+        "es": [
+            "{topic} no funciona",
+            "{topic} se cayo otra vez",
+            "{topic} tiene errores",
+            "el codigo de {topic} es un desastre",
+            "{topic} lanza errores constantemente",
+        ],
+        "pt": [
+            "{topic} parou de funcionar",
+            "{topic} travou de novo",
+            "{topic} esta com bug",
+            "o codigo do {topic} ta horrivel",
+            "{topic} da erro toda hora",
+        ],
+        "ru": [
+            "{topic} ne rabotaet pochini",
+            "{topic} opyat slomalsja",
+            "{topic} gljuchit",
+            "kod {topic} uzhasen",
+            "{topic} postojanno vydaet oshibki",
+        ],
+        "ja": [
+            "{topic} ugokimasen naoshite",
+            "{topic} kurasshu shita",
+            "{topic} bagu darake",
+            "{topic} koodo kitanai",
+            "{topic} eraa bakari deru",
+        ],
+        "zh": [
+            "{topic} huaile xiufu yixia",
+            "{topic} bengkui le",
+            "{topic} you bug",
+            "{topic} daima hen luan",
+            "{topic} yizhi baocuo",
+        ],
+        "ko": [
+            "{topic} i jakdonghaji anseumnida",
+            "{topic} i chungdol haesseumnida",
+            "{topic} e beogeu isseoyo",
+            "{topic} kodeu eojileowoyo",
+            "{topic} gyesok eleo naseubnida",
+        ],
     },
     "descriptive": {
-        "tr": ["{topic} icin bir cozum lazim, mevcut yapi yetersiz kaliyor",
-               "{topic} ozelligini eklememiz gerekiyor, kullanicilar talep etti",
-               "{topic} performansi dusuk, iyilestirmemiz sart",
-               "yeni bir {topic} modulu gerekiyor, mevcut olan ihtiyaci karsilamiyor",
-               "{topic} konusunda refactoring yapmamiz lazim, teknik borc birikiyor"],
-        "en": ["we need a solution for {topic}, current approach isn't scaling",
-               "need to add {topic} feature, users have been requesting it",
-               "{topic} performance is degrading, needs optimization",
-               "we need a new {topic} module, the existing one doesn't meet requirements",
-               "{topic} needs refactoring, tech debt is piling up"],
-        "de": ["wir brauchen eine Loesung fuer {topic}, der aktuelle Ansatz skaliert nicht",
-               "{topic}-Funktion muss hinzugefuegt werden, Benutzer haben es angefordert",
-               "{topic}-Leistung verschlechtert sich, braucht Optimierung"],
-        "fr": ["nous avons besoin d'une solution pour {topic}, l'approche actuelle ne scale pas",
-               "il faut ajouter la fonctionnalite {topic}, les utilisateurs la demandent",
-               "les performances de {topic} se degradent, optimisation necessaire"],
-        "es": ["necesitamos una solucion para {topic}, el enfoque actual no escala",
-               "hay que agregar la funcionalidad de {topic}, los usuarios la piden",
-               "el rendimiento de {topic} se degrada, necesita optimizacion"],
-        "pt": ["precisamos de uma solucao para {topic}, a abordagem atual nao escala",
-               "precisa adicionar a funcionalidade de {topic}, usuarios estao pedindo",
-               "o desempenho de {topic} esta caindo, precisa de otimizacao"],
-        "ru": ["nam nuzhno reshenie dlja {topic}, tekuschij podhod ne masshtabiruetsja",
-               "nado dobavit funkcional {topic}, polzovateli prosili",
-               "proizvoditelnost {topic} padaet, nuzhna optimizacija"],
-        "ja": ["{topic} no kaiketsu saku ga hitsuyou, genzai no houhou dewa tarinai",
-               "{topic} kinoo wo tsuika suru hitsuyou ga aru, yuuzaa kara no youbou",
-               "{topic} no pafoomansu ga teika, saitekika ga hitsuyou"],
-        "zh": ["women xuyao {topic} de jiejue fangan, muqian de fangfa wufa kuozhan",
-               "xuyao tianjia {topic} gongneng, yonghu yizhi zai yaoqiu",
-               "{topic} xingneng xiajiang, xuyao youhua"],
-        "ko": ["{topic} e daehan haegyeol chaegi pilyohabnida, hyeonjae jeobgeun bangsigeun hwakjang bulga",
-               "{topic} gineungeul chugahaeya habnida, sayongja yogu sahangibnida",
-               "{topic} seongneongi jeoha doegoisseoyo, choejeoghwa pilyohabnida"],
+        "tr": [
+            "{topic} icin bir cozum lazim, mevcut yapi yetersiz kaliyor",
+            "{topic} ozelligini eklememiz gerekiyor, kullanicilar talep etti",
+            "{topic} performansi dusuk, iyilestirmemiz sart",
+            "yeni bir {topic} modulu gerekiyor, mevcut olan ihtiyaci karsilamiyor",
+            "{topic} konusunda refactoring yapmamiz lazim, teknik borc birikiyor",
+        ],
+        "en": [
+            "we need a solution for {topic}, current approach isn't scaling",
+            "need to add {topic} feature, users have been requesting it",
+            "{topic} performance is degrading, needs optimization",
+            "we need a new {topic} module, the existing one doesn't meet requirements",
+            "{topic} needs refactoring, tech debt is piling up",
+        ],
+        "de": [
+            "wir brauchen eine Loesung fuer {topic}, der aktuelle Ansatz skaliert nicht",
+            "{topic}-Funktion muss hinzugefuegt werden, Benutzer haben es angefordert",
+            "{topic}-Leistung verschlechtert sich, braucht Optimierung",
+        ],
+        "fr": [
+            "nous avons besoin d'une solution pour {topic}, l'approche actuelle ne scale pas",
+            "il faut ajouter la fonctionnalite {topic}, les utilisateurs la demandent",
+            "les performances de {topic} se degradent, optimisation necessaire",
+        ],
+        "es": [
+            "necesitamos una solucion para {topic}, el enfoque actual no escala",
+            "hay que agregar la funcionalidad de {topic}, los usuarios la piden",
+            "el rendimiento de {topic} se degrada, necesita optimizacion",
+        ],
+        "pt": [
+            "precisamos de uma solucao para {topic}, a abordagem atual nao escala",
+            "precisa adicionar a funcionalidade de {topic}, usuarios estao pedindo",
+            "o desempenho de {topic} esta caindo, precisa de otimizacao",
+        ],
+        "ru": [
+            "nam nuzhno reshenie dlja {topic}, tekuschij podhod ne masshtabiruetsja",
+            "nado dobavit funkcional {topic}, polzovateli prosili",
+            "proizvoditelnost {topic} padaet, nuzhna optimizacija",
+        ],
+        "ja": [
+            "{topic} no kaiketsu saku ga hitsuyou, genzai no houhou dewa tarinai",
+            "{topic} kinoo wo tsuika suru hitsuyou ga aru, yuuzaa kara no youbou",
+            "{topic} no pafoomansu ga teika, saitekika ga hitsuyou",
+        ],
+        "zh": [
+            "women xuyao {topic} de jiejue fangan, muqian de fangfa wufa kuozhan",
+            "xuyao tianjia {topic} gongneng, yonghu yizhi zai yaoqiu",
+            "{topic} xingneng xiajiang, xuyao youhua",
+        ],
+        "ko": [
+            "{topic} e daehan haegyeol chaegi pilyohabnida, hyeonjae jeobgeun bangsigeun hwakjang bulga",
+            "{topic} gineungeul chugahaeya habnida, sayongja yogu sahangibnida",
+            "{topic} seongneongi jeoha doegoisseoyo, choejeoghwa pilyohabnida",
+        ],
     },
     "vague": {
-        "tr": ["su {topic} mevzusuna bi bak", "{topic} ile ilgili bisey yap",
-               "{topic} var ya onu hallet", "{topic} konusu", "{topic} isine bi el at",
-               "ya su {topic} meselesin de bi baksan", "{topic} ile ugras biraz"],
-        "en": ["look into {topic}", "do something about {topic}",
-               "handle the {topic} thing", "can you check {topic}",
-               "work on {topic} a bit", "something's off with {topic}",
-               "{topic} needs attention", "take a look at {topic}"],
-        "de": ["schau dir {topic} an", "mach was mit {topic}",
-               "kuemmere dich um {topic}", "check mal {topic}"],
-        "fr": ["regarde {topic}", "fais quelque chose avec {topic}",
-               "occupe-toi de {topic}", "verifie {topic}"],
-        "es": ["revisa {topic}", "haz algo con {topic}",
-               "encargete de {topic}", "checa {topic}"],
-        "pt": ["da uma olhada no {topic}", "faz alguma coisa com {topic}",
-               "cuida do {topic}", "verifica {topic}"],
-        "ru": ["posmotri {topic}", "sdelaj chto-nibud s {topic}",
-               "zajmis {topic}", "prover {topic}"],
-        "ja": ["{topic} mite", "{topic} nanika yatte",
-               "{topic} tanomu", "{topic} chekku shite"],
-        "zh": ["kan yixia {topic}", "chuli yixia {topic}",
-               "guanli yixia {topic}", "jiancha {topic}"],
-        "ko": ["{topic} jom bwajuseyo", "{topic} eotteokhae bwajuseyo",
-               "{topic} cheolihaejuseyo", "{topic} hwaninhae juseyo"],
+        "tr": [
+            "su {topic} mevzusuna bi bak",
+            "{topic} ile ilgili bisey yap",
+            "{topic} var ya onu hallet",
+            "{topic} konusu",
+            "{topic} isine bi el at",
+            "ya su {topic} meselesin de bi baksan",
+            "{topic} ile ugras biraz",
+        ],
+        "en": [
+            "look into {topic}",
+            "do something about {topic}",
+            "handle the {topic} thing",
+            "can you check {topic}",
+            "work on {topic} a bit",
+            "something's off with {topic}",
+            "{topic} needs attention",
+            "take a look at {topic}",
+        ],
+        "de": [
+            "schau dir {topic} an",
+            "mach was mit {topic}",
+            "kuemmere dich um {topic}",
+            "check mal {topic}",
+        ],
+        "fr": [
+            "regarde {topic}",
+            "fais quelque chose avec {topic}",
+            "occupe-toi de {topic}",
+            "verifie {topic}",
+        ],
+        "es": ["revisa {topic}", "haz algo con {topic}", "encargete de {topic}", "checa {topic}"],
+        "pt": [
+            "da uma olhada no {topic}",
+            "faz alguma coisa com {topic}",
+            "cuida do {topic}",
+            "verifica {topic}",
+        ],
+        "ru": [
+            "posmotri {topic}",
+            "sdelaj chto-nibud s {topic}",
+            "zajmis {topic}",
+            "prover {topic}",
+        ],
+        "ja": ["{topic} mite", "{topic} nanika yatte", "{topic} tanomu", "{topic} chekku shite"],
+        "zh": [
+            "kan yixia {topic}",
+            "chuli yixia {topic}",
+            "guanli yixia {topic}",
+            "jiancha {topic}",
+        ],
+        "ko": [
+            "{topic} jom bwajuseyo",
+            "{topic} eotteokhae bwajuseyo",
+            "{topic} cheolihaejuseyo",
+            "{topic} hwaninhae juseyo",
+        ],
     },
     "contextual": {
-        "tr": ["dun konustugumuz {topic} konusuna devam edelim",
-               "gecen hafta basladigimiz {topic} islemi var, onu bitirmemiz lazim",
-               "onceki PR'daki {topic} degisikligini guncellememiz gerekiyor",
-               "sprint planimizda {topic} vardi, ona bakalim",
-               "musteriden {topic} hakkinda sikayet geldi, acil bakmamiz lazim"],
-        "en": ["let's continue with the {topic} we discussed yesterday",
-               "there's the {topic} work from last sprint, need to finish it",
-               "need to update the {topic} changes from the previous PR",
-               "{topic} was in our sprint plan, let's work on it",
-               "got a customer complaint about {topic}, need to look at it urgently"],
-        "de": ["lass uns mit {topic} weitermachen, das wir gestern besprochen haben",
-               "die {topic}-Arbeit vom letzten Sprint muss fertig werden",
-               "{topic} war in unserem Sprint-Plan, lass uns daran arbeiten"],
-        "fr": ["continuons avec {topic} dont on a parle hier",
-               "il y a le travail sur {topic} du dernier sprint a finir",
-               "{topic} etait dans notre plan de sprint, travaillons dessus"],
-        "es": ["continuemos con {topic} que discutimos ayer",
-               "hay que terminar el trabajo de {topic} del sprint pasado",
-               "{topic} estaba en nuestro plan de sprint, trabajemos en eso"],
-        "pt": ["vamos continuar com {topic} que discutimos ontem",
-               "tem o trabalho de {topic} do sprint passado pra terminar",
-               "{topic} estava no plano do sprint, vamos trabalhar nisso"],
-        "ru": ["prodolzhim s {topic} o kotorom govorili vchera",
-               "est rabota po {topic} s proshlogo sprinta, nado zavershit",
-               "{topic} byl v plane sprinta, davaj zajmemsja"],
-        "ja": ["{topic} no kinou no tsuzuki wo shiyou",
-               "mae no supurinto no {topic} wo owarasenai to",
-               "supurinto keikaku ni {topic} ga atta, sore wo yarou"],
-        "zh": ["women jixu zuotian taolun de {topic}",
-               "shang ge chongci de {topic} gongzuo yao wancheng",
-               "{topic} zai women de chongci jihua zhong, kaishi ba"],
-        "ko": ["{topic} eoje iyagihan geo gyesok habnida",
-               "jinan seupeurinteu {topic} jageop kkeutnaeyahabnida",
-               "{topic} i seupeurinteu gyehoege isseoyo, geu jageop habnida"],
+        "tr": [
+            "dun konustugumuz {topic} konusuna devam edelim",
+            "gecen hafta basladigimiz {topic} islemi var, onu bitirmemiz lazim",
+            "onceki PR'daki {topic} degisikligini guncellememiz gerekiyor",
+            "sprint planimizda {topic} vardi, ona bakalim",
+            "musteriden {topic} hakkinda sikayet geldi, acil bakmamiz lazim",
+        ],
+        "en": [
+            "let's continue with the {topic} we discussed yesterday",
+            "there's the {topic} work from last sprint, need to finish it",
+            "need to update the {topic} changes from the previous PR",
+            "{topic} was in our sprint plan, let's work on it",
+            "got a customer complaint about {topic}, need to look at it urgently",
+        ],
+        "de": [
+            "lass uns mit {topic} weitermachen, das wir gestern besprochen haben",
+            "die {topic}-Arbeit vom letzten Sprint muss fertig werden",
+            "{topic} war in unserem Sprint-Plan, lass uns daran arbeiten",
+        ],
+        "fr": [
+            "continuons avec {topic} dont on a parle hier",
+            "il y a le travail sur {topic} du dernier sprint a finir",
+            "{topic} etait dans notre plan de sprint, travaillons dessus",
+        ],
+        "es": [
+            "continuemos con {topic} que discutimos ayer",
+            "hay que terminar el trabajo de {topic} del sprint pasado",
+            "{topic} estaba en nuestro plan de sprint, trabajemos en eso",
+        ],
+        "pt": [
+            "vamos continuar com {topic} que discutimos ontem",
+            "tem o trabalho de {topic} do sprint passado pra terminar",
+            "{topic} estava no plano do sprint, vamos trabalhar nisso",
+        ],
+        "ru": [
+            "prodolzhim s {topic} o kotorom govorili vchera",
+            "est rabota po {topic} s proshlogo sprinta, nado zavershit",
+            "{topic} byl v plane sprinta, davaj zajmemsja",
+        ],
+        "ja": [
+            "{topic} no kinou no tsuzuki wo shiyou",
+            "mae no supurinto no {topic} wo owarasenai to",
+            "supurinto keikaku ni {topic} ga atta, sore wo yarou",
+        ],
+        "zh": [
+            "women jixu zuotian taolun de {topic}",
+            "shang ge chongci de {topic} gongzuo yao wancheng",
+            "{topic} zai women de chongci jihua zhong, kaishi ba",
+        ],
+        "ko": [
+            "{topic} eoje iyagihan geo gyesok habnida",
+            "jinan seupeurinteu {topic} jageop kkeutnaeyahabnida",
+            "{topic} i seupeurinteu gyehoege isseoyo, geu jageop habnida",
+        ],
     },
 }
 
-# ---------------------------------------------------------------------------
 # Urgency eklemeleri
-# ---------------------------------------------------------------------------
 
 URGENCY_SUFFIXES = {
-    "tr": ["hemen", "acil", "simdi", "hadi", "bi el at", "dur yapiyom",
-           "lutfen", "bekletme", "hizlica"],
-    "en": ["now", "asap", "quickly", "hurry", "right away", "urgent",
-           "please", "don't delay", "fast"],
+    "tr": [
+        "hemen",
+        "acil",
+        "simdi",
+        "hadi",
+        "bi el at",
+        "dur yapiyom",
+        "lutfen",
+        "bekletme",
+        "hizlica",
+    ],
+    "en": [
+        "now",
+        "asap",
+        "quickly",
+        "hurry",
+        "right away",
+        "urgent",
+        "please",
+        "don't delay",
+        "fast",
+    ],
     "de": ["jetzt", "sofort", "schnell", "dringend", "bitte", "eilig"],
     "fr": ["maintenant", "urgent", "vite", "rapidement", "tout de suite", "s'il te plait"],
     "es": ["ahora", "urgente", "rapido", "ya", "por favor", "de inmediato"],
@@ -392,9 +1222,7 @@ URGENCY_SUFFIXES = {
     "ko": ["jigeum", "geubhi", "ppalli", "eoseo", "juseyo"],
 }
 
-# ---------------------------------------------------------------------------
 # Sistem promptu ornekleri
-# ---------------------------------------------------------------------------
 
 SYSTEM_PROMPTS = {
     "tr": [
@@ -458,9 +1286,7 @@ SYSTEM_PROMPTS = {
     ],
 }
 
-# ---------------------------------------------------------------------------
 # Proje baglami ornekleri
-# ---------------------------------------------------------------------------
 
 PROJECT_CONTEXTS = {
     "tr": [
@@ -515,9 +1341,7 @@ PROJECT_CONTEXTS = {
     ],
 }
 
-# ---------------------------------------------------------------------------
 # Hafiza / gecmis etkilesim ornekleri
-# ---------------------------------------------------------------------------
 
 MEMORY_SNIPPETS = {
     "tr": [
@@ -572,9 +1396,7 @@ MEMORY_SNIPPETS = {
     ],
 }
 
-# ---------------------------------------------------------------------------
 # Sorulan sorular havuzu
-# ---------------------------------------------------------------------------
 
 CLARIFYING_QUESTIONS = {
     "tr": [
@@ -658,90 +1480,198 @@ CLARIFYING_QUESTIONS = {
     ],
 }
 
-# ---------------------------------------------------------------------------
 # Cikti yapilandirma blok sablonlari (archetype'lar)
-# ---------------------------------------------------------------------------
 
 SECTION_LABELS = {
     "tr": {
-        "task": "Gorev", "goal": "Hedef", "context": "Baglam", "scope": "Kapsam",
-        "constraints": "Kisitlar", "acceptance": "Kabul kriterleri",
-        "format": "Cikti formati", "steps": "Adimlar", "risks": "Riskler",
-        "assumptions": "Varsayimlar", "priority": "Oncelik", "dont": "Yapilmayacaklar",
-        "questions": "Sorular", "examples": "Ornekler", "role": "Rol",
-        "background": "Arka plan", "deliverables": "Teslim edilecekler",
-        "timeline": "Zaman cizelgesi", "dependencies": "Bagimliliklar",
-        "success": "Basari olcutleri", "alternatives": "Alternatifler",
-        "notes": "Notlar", "refs": "Kaynaklar",
+        "task": "Gorev",
+        "goal": "Hedef",
+        "context": "Baglam",
+        "scope": "Kapsam",
+        "constraints": "Kisitlar",
+        "acceptance": "Kabul kriterleri",
+        "format": "Cikti formati",
+        "steps": "Adimlar",
+        "risks": "Riskler",
+        "assumptions": "Varsayimlar",
+        "priority": "Oncelik",
+        "dont": "Yapilmayacaklar",
+        "questions": "Sorular",
+        "examples": "Ornekler",
+        "role": "Rol",
+        "background": "Arka plan",
+        "deliverables": "Teslim edilecekler",
+        "timeline": "Zaman cizelgesi",
+        "dependencies": "Bagimliliklar",
+        "success": "Basari olcutleri",
+        "alternatives": "Alternatifler",
+        "notes": "Notlar",
+        "refs": "Kaynaklar",
     },
     "en": {
-        "task": "Task", "goal": "Goal", "context": "Context", "scope": "Scope",
-        "constraints": "Constraints", "acceptance": "Acceptance criteria",
-        "format": "Output format", "steps": "Steps", "risks": "Risks",
-        "assumptions": "Assumptions", "priority": "Priority", "dont": "Do not",
-        "questions": "Questions", "examples": "Examples", "role": "Role",
-        "background": "Background", "deliverables": "Deliverables",
-        "timeline": "Timeline", "dependencies": "Dependencies",
-        "success": "Success metrics", "alternatives": "Alternatives",
-        "notes": "Notes", "refs": "References",
+        "task": "Task",
+        "goal": "Goal",
+        "context": "Context",
+        "scope": "Scope",
+        "constraints": "Constraints",
+        "acceptance": "Acceptance criteria",
+        "format": "Output format",
+        "steps": "Steps",
+        "risks": "Risks",
+        "assumptions": "Assumptions",
+        "priority": "Priority",
+        "dont": "Do not",
+        "questions": "Questions",
+        "examples": "Examples",
+        "role": "Role",
+        "background": "Background",
+        "deliverables": "Deliverables",
+        "timeline": "Timeline",
+        "dependencies": "Dependencies",
+        "success": "Success metrics",
+        "alternatives": "Alternatives",
+        "notes": "Notes",
+        "refs": "References",
     },
     "de": {
-        "task": "Aufgabe", "goal": "Ziel", "context": "Kontext", "scope": "Umfang",
-        "constraints": "Einschraenkungen", "acceptance": "Akzeptanzkriterien",
-        "format": "Ausgabeformat", "steps": "Schritte", "risks": "Risiken",
-        "assumptions": "Annahmen", "priority": "Prioritaet", "dont": "Nicht erlaubt",
-        "questions": "Fragen", "examples": "Beispiele", "role": "Rolle",
-        "background": "Hintergrund", "deliverables": "Liefergegenstande",
+        "task": "Aufgabe",
+        "goal": "Ziel",
+        "context": "Kontext",
+        "scope": "Umfang",
+        "constraints": "Einschraenkungen",
+        "acceptance": "Akzeptanzkriterien",
+        "format": "Ausgabeformat",
+        "steps": "Schritte",
+        "risks": "Risiken",
+        "assumptions": "Annahmen",
+        "priority": "Prioritaet",
+        "dont": "Nicht erlaubt",
+        "questions": "Fragen",
+        "examples": "Beispiele",
+        "role": "Rolle",
+        "background": "Hintergrund",
+        "deliverables": "Liefergegenstande",
     },
     "fr": {
-        "task": "Tache", "goal": "Objectif", "context": "Contexte", "scope": "Portee",
-        "constraints": "Contraintes", "acceptance": "Criteres d'acceptation",
-        "format": "Format de sortie", "steps": "Etapes", "risks": "Risques",
-        "assumptions": "Hypotheses", "priority": "Priorite", "dont": "A ne pas faire",
-        "questions": "Questions", "examples": "Exemples", "role": "Role",
-        "background": "Contexte general", "deliverables": "Livrables",
+        "task": "Tache",
+        "goal": "Objectif",
+        "context": "Contexte",
+        "scope": "Portee",
+        "constraints": "Contraintes",
+        "acceptance": "Criteres d'acceptation",
+        "format": "Format de sortie",
+        "steps": "Etapes",
+        "risks": "Risques",
+        "assumptions": "Hypotheses",
+        "priority": "Priorite",
+        "dont": "A ne pas faire",
+        "questions": "Questions",
+        "examples": "Exemples",
+        "role": "Role",
+        "background": "Contexte general",
+        "deliverables": "Livrables",
     },
     "es": {
-        "task": "Tarea", "goal": "Objetivo", "context": "Contexto", "scope": "Alcance",
-        "constraints": "Restricciones", "acceptance": "Criterios de aceptacion",
-        "format": "Formato de salida", "steps": "Pasos", "risks": "Riesgos",
-        "assumptions": "Suposiciones", "priority": "Prioridad", "dont": "No hacer",
-        "questions": "Preguntas", "examples": "Ejemplos", "role": "Rol",
+        "task": "Tarea",
+        "goal": "Objetivo",
+        "context": "Contexto",
+        "scope": "Alcance",
+        "constraints": "Restricciones",
+        "acceptance": "Criterios de aceptacion",
+        "format": "Formato de salida",
+        "steps": "Pasos",
+        "risks": "Riesgos",
+        "assumptions": "Suposiciones",
+        "priority": "Prioridad",
+        "dont": "No hacer",
+        "questions": "Preguntas",
+        "examples": "Ejemplos",
+        "role": "Rol",
     },
     "pt": {
-        "task": "Tarefa", "goal": "Objetivo", "context": "Contexto", "scope": "Escopo",
-        "constraints": "Restricoes", "acceptance": "Criterios de aceitacao",
-        "format": "Formato de saida", "steps": "Etapas", "risks": "Riscos",
-        "assumptions": "Suposicoes", "priority": "Prioridade", "dont": "Nao fazer",
-        "questions": "Perguntas", "examples": "Exemplos", "role": "Papel",
+        "task": "Tarefa",
+        "goal": "Objetivo",
+        "context": "Contexto",
+        "scope": "Escopo",
+        "constraints": "Restricoes",
+        "acceptance": "Criterios de aceitacao",
+        "format": "Formato de saida",
+        "steps": "Etapas",
+        "risks": "Riscos",
+        "assumptions": "Suposicoes",
+        "priority": "Prioridade",
+        "dont": "Nao fazer",
+        "questions": "Perguntas",
+        "examples": "Exemplos",
+        "role": "Papel",
     },
     "ru": {
-        "task": "Zadacha", "goal": "Cel", "context": "Kontekst", "scope": "Oblast",
-        "constraints": "Ogranichenija", "acceptance": "Kriterii priemki",
-        "format": "Format vyvoda", "steps": "Shagi", "risks": "Riski",
-        "assumptions": "Dopushchenija", "priority": "Prioritet", "dont": "Ne delat",
-        "questions": "Voprosy", "examples": "Primery", "role": "Rol",
+        "task": "Zadacha",
+        "goal": "Cel",
+        "context": "Kontekst",
+        "scope": "Oblast",
+        "constraints": "Ogranichenija",
+        "acceptance": "Kriterii priemki",
+        "format": "Format vyvoda",
+        "steps": "Shagi",
+        "risks": "Riski",
+        "assumptions": "Dopushchenija",
+        "priority": "Prioritet",
+        "dont": "Ne delat",
+        "questions": "Voprosy",
+        "examples": "Primery",
+        "role": "Rol",
     },
     "ja": {
-        "task": "Tasuku", "goal": "Mokuhyou", "context": "Kontekisuto", "scope": "Sukopu",
-        "constraints": "Seiyaku", "acceptance": "Judaku kijun",
-        "format": "Shutsuryoku keishiki", "steps": "Tejun", "risks": "Risuku",
-        "assumptions": "Zentei", "priority": "Yuusen jun-i", "dont": "Kinshi jiko",
-        "questions": "Shitsumon", "examples": "Rei", "role": "Yakuwari",
+        "task": "Tasuku",
+        "goal": "Mokuhyou",
+        "context": "Kontekisuto",
+        "scope": "Sukopu",
+        "constraints": "Seiyaku",
+        "acceptance": "Judaku kijun",
+        "format": "Shutsuryoku keishiki",
+        "steps": "Tejun",
+        "risks": "Risuku",
+        "assumptions": "Zentei",
+        "priority": "Yuusen jun-i",
+        "dont": "Kinshi jiko",
+        "questions": "Shitsumon",
+        "examples": "Rei",
+        "role": "Yakuwari",
     },
     "zh": {
-        "task": "Renwu", "goal": "Mubiao", "context": "Beijing", "scope": "Fanwei",
-        "constraints": "Yueshu", "acceptance": "Yanshou biaozhun",
-        "format": "Shuchu geshi", "steps": "Buzhou", "risks": "Fengxian",
-        "assumptions": "Jiashe", "priority": "Youxian ji", "dont": "Jinzhi",
-        "questions": "Wenti", "examples": "Shili", "role": "Jiaose",
+        "task": "Renwu",
+        "goal": "Mubiao",
+        "context": "Beijing",
+        "scope": "Fanwei",
+        "constraints": "Yueshu",
+        "acceptance": "Yanshou biaozhun",
+        "format": "Shuchu geshi",
+        "steps": "Buzhou",
+        "risks": "Fengxian",
+        "assumptions": "Jiashe",
+        "priority": "Youxian ji",
+        "dont": "Jinzhi",
+        "questions": "Wenti",
+        "examples": "Shili",
+        "role": "Jiaose",
     },
     "ko": {
-        "task": "Jakop", "goal": "Mokpyo", "context": "Baegyeong", "scope": "Beomwi",
-        "constraints": "Jeyak joseon", "acceptance": "Surak gijun",
-        "format": "Chullyeok hyeongsik", "steps": "Dangyae", "risks": "Wiheom",
-        "assumptions": "Gasseol", "priority": "Useon sunwi", "dont": "Geumji sahang",
-        "questions": "Jilmun", "examples": "Yesi", "role": "Yeokhal",
+        "task": "Jakop",
+        "goal": "Mokpyo",
+        "context": "Baegyeong",
+        "scope": "Beomwi",
+        "constraints": "Jeyak joseon",
+        "acceptance": "Surak gijun",
+        "format": "Chullyeok hyeongsik",
+        "steps": "Dangyae",
+        "risks": "Wiheom",
+        "assumptions": "Gasseol",
+        "priority": "Useon sunwi",
+        "dont": "Geumji sahang",
+        "questions": "Jilmun",
+        "examples": "Yesi",
+        "role": "Yeokhal",
     },
 }
 
@@ -751,9 +1681,7 @@ def _L(lang: str, key: str) -> str:
     return labels.get(key, SECTION_LABELS["en"].get(key, key))
 
 
-# ---------------------------------------------------------------------------
 # Archetype tanimlari
-# ---------------------------------------------------------------------------
 
 ARCHETYPES = [
     "standard",
@@ -797,8 +1725,16 @@ def _pick_sections(archetype: str, rng: random.Random) -> list[str]:
     }
     sections = list(base_maps.get(archetype, base_maps["standard"]))
 
-    extras = ["notes", "refs", "dependencies", "alternatives", "format",
-              "acceptance", "deliverables", "timeline"]
+    extras = [
+        "notes",
+        "refs",
+        "dependencies",
+        "alternatives",
+        "format",
+        "acceptance",
+        "deliverables",
+        "timeline",
+    ]
     if rng.random() < 0.35:
         extra = rng.choice(extras)
         if extra not in sections:
@@ -808,15 +1744,13 @@ def _pick_sections(archetype: str, rng: random.Random) -> list[str]:
     return sections
 
 
-# ---------------------------------------------------------------------------
 # Icerik ureticileri (her bolum icin gercekci doldurma)
-# ---------------------------------------------------------------------------
 
-def _fill_section(section: str, topic: str, lang: str, rng: random.Random,
-                  *, category: str = "") -> list[str]:
+
+def _fill_section(
+    section: str, topic: str, lang: str, rng: random.Random, *, category: str = ""
+) -> list[str]:
     """Bir bolumun icerigini uretir (satirlar listesi)."""
-    L = SECTION_LABELS.get(lang, SECTION_LABELS["en"])
-
     if section == "task":
         return _task_content(topic, lang, rng, category)
     elif section == "goal":
@@ -874,49 +1808,135 @@ def _fill_section(section: str, topic: str, lang: str, rng: random.Random,
 # ---------- Bolum icerik fonksiyonlari ----------
 
 _TASK_VERBS = {
-    "tr": ["Implement et", "Olustur", "Gelistir", "Yaz", "Tasarla ve kodla",
-           "Hazirla", "Kur", "Entegre et"],
-    "en": ["Implement", "Create", "Develop", "Build", "Design and code",
-           "Set up", "Integrate", "Write"],
-    "de": ["Implementiere", "Erstelle", "Entwickle", "Baue", "Entwirf und codiere",
-           "Richte ein", "Integriere"],
-    "fr": ["Implemente", "Cree", "Developpe", "Construis", "Concois et code",
-           "Configure", "Integre"],
-    "es": ["Implementa", "Crea", "Desarrolla", "Construye", "Disena y codifica",
-           "Configura", "Integra"],
-    "pt": ["Implemente", "Crie", "Desenvolva", "Construa", "Projete e codifique",
-           "Configure", "Integre"],
-    "ru": ["Realizuj", "Sozdaj", "Razrabotaj", "Postroy", "Sprojektiruj i zakodiruj",
-           "Nastroy", "Integriruj"],
-    "ja": ["Jissou shite", "Sakusei shite", "Kaihatsu shite", "Kouchiku shite",
-           "Sekkei shite koodo kaite"],
-    "zh": ["Shixian", "Chuangjian", "Kaifa", "Goujian", "Sheji bing bianma",
-           "Peizhi", "Jicheng"],
-    "ko": ["Guhyeon", "Saengseong", "Gaebal", "Guchuk", "Seolgye mit koding",
-           "Seoljeong", "Tonghap"],
+    "tr": [
+        "Implement et",
+        "Olustur",
+        "Gelistir",
+        "Yaz",
+        "Tasarla ve kodla",
+        "Hazirla",
+        "Kur",
+        "Entegre et",
+    ],
+    "en": [
+        "Implement",
+        "Create",
+        "Develop",
+        "Build",
+        "Design and code",
+        "Set up",
+        "Integrate",
+        "Write",
+    ],
+    "de": [
+        "Implementiere",
+        "Erstelle",
+        "Entwickle",
+        "Baue",
+        "Entwirf und codiere",
+        "Richte ein",
+        "Integriere",
+    ],
+    "fr": [
+        "Implemente",
+        "Cree",
+        "Developpe",
+        "Construis",
+        "Concois et code",
+        "Configure",
+        "Integre",
+    ],
+    "es": [
+        "Implementa",
+        "Crea",
+        "Desarrolla",
+        "Construye",
+        "Disena y codifica",
+        "Configura",
+        "Integra",
+    ],
+    "pt": [
+        "Implemente",
+        "Crie",
+        "Desenvolva",
+        "Construa",
+        "Projete e codifique",
+        "Configure",
+        "Integre",
+    ],
+    "ru": [
+        "Realizuj",
+        "Sozdaj",
+        "Razrabotaj",
+        "Postroy",
+        "Sprojektiruj i zakodiruj",
+        "Nastroy",
+        "Integriruj",
+    ],
+    "ja": [
+        "Jissou shite",
+        "Sakusei shite",
+        "Kaihatsu shite",
+        "Kouchiku shite",
+        "Sekkei shite koodo kaite",
+    ],
+    "zh": ["Shixian", "Chuangjian", "Kaifa", "Goujian", "Sheji bing bianma", "Peizhi", "Jicheng"],
+    "ko": [
+        "Guhyeon",
+        "Saengseong",
+        "Gaebal",
+        "Guchuk",
+        "Seolgye mit koding",
+        "Seoljeong",
+        "Tonghap",
+    ],
 }
 
 _QUALITY_ATTRS = {
-    "tr": ["performansli", "test edilebilir", "bakimi kolay", "olceklenebilir",
-           "guvenli", "temiz", "modular", "yeniden kullanilabilir"],
-    "en": ["performant", "testable", "maintainable", "scalable",
-           "secure", "clean", "modular", "reusable"],
-    "de": ["performant", "testbar", "wartbar", "skalierbar",
-           "sicher", "sauber", "modular"],
-    "fr": ["performant", "testable", "maintenable", "scalable",
-           "securise", "propre", "modulaire"],
-    "es": ["performante", "testeable", "mantenible", "escalable",
-           "seguro", "limpio", "modular"],
-    "pt": ["performante", "testavel", "mantenivel", "escalavel",
-           "seguro", "limpo", "modular"],
-    "ru": ["proizvoditelnyj", "testiruemyj", "podderzhivaemyj", "masshtabiruemyj",
-           "bezopasnyj", "chistyj", "modulnyj"],
-    "ja": ["koosoku", "tesuto kanou", "iji kantan", "sukeeraburu",
-           "anzen", "kuriin", "mojuuraa"],
-    "zh": ["gaoxingneng", "ke ceshi", "yi weihu", "ke kuozhan",
-           "anquan", "zhengji", "moduhua"],
-    "ko": ["goseongneung", "teseuteu ganeung", "yuji gwanli yongyi", "hwakjang ganeung",
-           "boanjeok", "kkaekkeuthan", "mojulhwa"],
+    "tr": [
+        "performansli",
+        "test edilebilir",
+        "bakimi kolay",
+        "olceklenebilir",
+        "guvenli",
+        "temiz",
+        "modular",
+        "yeniden kullanilabilir",
+    ],
+    "en": [
+        "performant",
+        "testable",
+        "maintainable",
+        "scalable",
+        "secure",
+        "clean",
+        "modular",
+        "reusable",
+    ],
+    "de": ["performant", "testbar", "wartbar", "skalierbar", "sicher", "sauber", "modular"],
+    "fr": ["performant", "testable", "maintenable", "scalable", "securise", "propre", "modulaire"],
+    "es": ["performante", "testeable", "mantenible", "escalable", "seguro", "limpio", "modular"],
+    "pt": ["performante", "testavel", "mantenivel", "escalavel", "seguro", "limpo", "modular"],
+    "ru": [
+        "proizvoditelnyj",
+        "testiruemyj",
+        "podderzhivaemyj",
+        "masshtabiruemyj",
+        "bezopasnyj",
+        "chistyj",
+        "modulnyj",
+    ],
+    "ja": ["koosoku", "tesuto kanou", "iji kantan", "sukeeraburu", "anzen", "kuriin", "mojuuraa"],
+    "zh": ["gaoxingneng", "ke ceshi", "yi weihu", "ke kuozhan", "anquan", "zhengji", "moduhua"],
+    "ko": [
+        "goseongneung",
+        "teseuteu ganeung",
+        "yuji gwanli yongyi",
+        "hwakjang ganeung",
+        "boanjeok",
+        "kkaekkeuthan",
+        "mojulhwa",
+    ],
 }
 
 
@@ -1021,20 +2041,35 @@ def _context_content(topic: str, lang: str, rng: random.Random) -> list[str]:
 def _scope_content(topic: str, lang: str, rng: random.Random) -> list[str]:
     templates = {
         "tr": {
-            "in": [f"{topic} cekirdek islevleri", "Hata yonetimi", "Temel testler",
-                   "Dokumantasyon guncelleme"],
-            "out": ["Performans optimizasyonu", "UI/UX degisiklikleri",
-                    "Veritabani sema degisiklikleri", "Ucuncu parti entegrasyonlar"],
+            "in": [
+                f"{topic} cekirdek islevleri",
+                "Hata yonetimi",
+                "Temel testler",
+                "Dokumantasyon guncelleme",
+            ],
+            "out": [
+                "Performans optimizasyonu",
+                "UI/UX degisiklikleri",
+                "Veritabani sema degisiklikleri",
+                "Ucuncu parti entegrasyonlar",
+            ],
         },
         "en": {
-            "in": [f"{topic} core functionality", "Error handling", "Basic tests",
-                   "Documentation update"],
-            "out": ["Performance optimization", "UI/UX changes",
-                    "Database schema changes", "Third-party integrations"],
+            "in": [
+                f"{topic} core functionality",
+                "Error handling",
+                "Basic tests",
+                "Documentation update",
+            ],
+            "out": [
+                "Performance optimization",
+                "UI/UX changes",
+                "Database schema changes",
+                "Third-party integrations",
+            ],
         },
     }
     t = templates.get(lang, templates["en"])
-    in_label = _L(lang, "scope")
     n_in = rng.randint(2, min(4, len(t["in"])))
     n_out = rng.randint(1, min(3, len(t["out"])))
     lines = [f"IN: {', '.join(rng.sample(t['in'], n_in))}"]
@@ -1122,20 +2157,48 @@ def _format_content(topic: str, lang: str, rng: random.Random) -> list[str]:
 def _steps_content(topic: str, lang: str, rng: random.Random) -> list[str]:
     pools = {
         "tr": [
-            [f"Mevcut {topic} kodunu analiz et.", "Degisiklikleri planla.",
-             "Implementasyonu yap.", "Testleri yaz ve calistir.", "Review icin hazirla."],
-            [f"{topic} icin arastirma yap.", "Prototip olustur.", "Geri bildirime gore iyilestir.",
-             "Uretim ortamina hazirla."],
-            [f"{topic} gereksinimlerini dokumante et.", "Teknik tasarimi olustur.",
-             "Kodla.", "Test et.", "Deploy et."],
+            [
+                f"Mevcut {topic} kodunu analiz et.",
+                "Degisiklikleri planla.",
+                "Implementasyonu yap.",
+                "Testleri yaz ve calistir.",
+                "Review icin hazirla.",
+            ],
+            [
+                f"{topic} icin arastirma yap.",
+                "Prototip olustur.",
+                "Geri bildirime gore iyilestir.",
+                "Uretim ortamina hazirla.",
+            ],
+            [
+                f"{topic} gereksinimlerini dokumante et.",
+                "Teknik tasarimi olustur.",
+                "Kodla.",
+                "Test et.",
+                "Deploy et.",
+            ],
         ],
         "en": [
-            [f"Analyze existing {topic} code.", "Plan the changes.",
-             "Implement.", "Write and run tests.", "Prepare for review."],
-            [f"Research {topic} approaches.", "Create a prototype.", "Refine based on feedback.",
-             "Prepare for production."],
-            [f"Document {topic} requirements.", "Create technical design.",
-             "Code it.", "Test it.", "Deploy."],
+            [
+                f"Analyze existing {topic} code.",
+                "Plan the changes.",
+                "Implement.",
+                "Write and run tests.",
+                "Prepare for review.",
+            ],
+            [
+                f"Research {topic} approaches.",
+                "Create a prototype.",
+                "Refine based on feedback.",
+                "Prepare for production.",
+            ],
+            [
+                f"Document {topic} requirements.",
+                "Create technical design.",
+                "Code it.",
+                "Test it.",
+                "Deploy.",
+            ],
         ],
     }
     pool = pools.get(lang, pools["en"])
@@ -1191,22 +2254,30 @@ def _assumption_content(topic: str, lang: str, rng: random.Random) -> list[str]:
 def _priority_content(topic: str, lang: str, rng: random.Random) -> list[str]:
     pools = {
         "tr": [
-            [f"P0 (Kritik): {topic} cekirdek islevselligini calistir.",
-             "P1 (Yuksek): Hata yonetimi ve edge case'ler.",
-             "P2 (Orta): Test coverage'i artir.",
-             "P3 (Dusuk): Dokumantasyon ve refactoring."],
-            [f"ONCELIKLI: {topic} MVP'sini cikart.",
-             "SONRA: Performans iyilestirmesi.",
-             "ILERIDE: Ileri duzey ozellikler."],
+            [
+                f"P0 (Kritik): {topic} cekirdek islevselligini calistir.",
+                "P1 (Yuksek): Hata yonetimi ve edge case'ler.",
+                "P2 (Orta): Test coverage'i artir.",
+                "P3 (Dusuk): Dokumantasyon ve refactoring.",
+            ],
+            [
+                f"ONCELIKLI: {topic} MVP'sini cikart.",
+                "SONRA: Performans iyilestirmesi.",
+                "ILERIDE: Ileri duzey ozellikler.",
+            ],
         ],
         "en": [
-            [f"P0 (Critical): Get {topic} core functionality working.",
-             "P1 (High): Error handling and edge cases.",
-             "P2 (Medium): Increase test coverage.",
-             "P3 (Low): Documentation and refactoring."],
-            [f"MUST: Ship {topic} MVP.",
-             "SHOULD: Performance improvements.",
-             "COULD: Advanced features."],
+            [
+                f"P0 (Critical): Get {topic} core functionality working.",
+                "P1 (High): Error handling and edge cases.",
+                "P2 (Medium): Increase test coverage.",
+                "P3 (Low): Documentation and refactoring.",
+            ],
+            [
+                f"MUST: Ship {topic} MVP.",
+                "SHOULD: Performance improvements.",
+                "COULD: Advanced features.",
+            ],
         ],
     }
     pool = pools.get(lang, pools["en"])
@@ -1244,14 +2315,18 @@ def _dont_content(topic: str, lang: str, rng: random.Random) -> list[str]:
 def _example_content(topic: str, lang: str, rng: random.Random) -> list[str]:
     pools = {
         "tr": [
-            [f"Giris: kullanici {topic} sayfasini acar.",
-             f"Beklenen: {topic} dogru sekilde yuklenir ve kullanilabilir.",
-             "Hata durumu: Anlamli hata mesaji gosterilir."],
+            [
+                f"Giris: kullanici {topic} sayfasini acar.",
+                f"Beklenen: {topic} dogru sekilde yuklenir ve kullanilabilir.",
+                "Hata durumu: Anlamli hata mesaji gosterilir.",
+            ],
         ],
         "en": [
-            [f"Input: user opens the {topic} page.",
-             f"Expected: {topic} loads correctly and is usable.",
-             "Error case: Meaningful error message is displayed."],
+            [
+                f"Input: user opens the {topic} page.",
+                f"Expected: {topic} loads correctly and is usable.",
+                "Error case: Meaningful error message is displayed.",
+            ],
         ],
     }
     pool = pools.get(lang, pools["en"])
@@ -1281,14 +2356,18 @@ def _deliverable_content(topic: str, lang: str, rng: random.Random) -> list[str]
 def _timeline_content(topic: str, lang: str, rng: random.Random) -> list[str]:
     pools = {
         "tr": [
-            ["Faz 1 (1-2 gun): Tasarim ve planlama.",
-             f"Faz 2 (3-5 gun): {topic} implementasyonu.",
-             "Faz 3 (1 gun): Test ve review."],
+            [
+                "Faz 1 (1-2 gun): Tasarim ve planlama.",
+                f"Faz 2 (3-5 gun): {topic} implementasyonu.",
+                "Faz 3 (1 gun): Test ve review.",
+            ],
         ],
         "en": [
-            ["Phase 1 (1-2 days): Design and planning.",
-             f"Phase 2 (3-5 days): {topic} implementation.",
-             "Phase 3 (1 day): Testing and review."],
+            [
+                "Phase 1 (1-2 days): Design and planning.",
+                f"Phase 2 (3-5 days): {topic} implementation.",
+                "Phase 3 (1 day): Testing and review.",
+            ],
         ],
     }
     pool = pools.get(lang, pools["en"])
@@ -1349,7 +2428,7 @@ def _alternative_content(topic: str, lang: str, rng: random.Random) -> list[str]
         ],
     }
     pool = pools.get(lang, pools["en"])
-    return pool[:rng.randint(2, len(pool))]
+    return pool[: rng.randint(2, len(pool))]
 
 
 def _notes_content(topic: str, lang: str, rng: random.Random) -> list[str]:
@@ -1376,63 +2455,62 @@ def _refs_content(topic: str, lang: str, rng: random.Random) -> list[str]:
     ]
 
 
-# ---------------------------------------------------------------------------
 # Hedef-bazinda formatlayicilar
-# ---------------------------------------------------------------------------
 
-def format_claude_code(sections: list[tuple[str, list[str]]], lang: str,
-                       rng: random.Random) -> str:
+
+def format_claude_code(sections: list[tuple[str, list[str]]], lang: str, rng: random.Random) -> str:
     parts = []
     for key, lines in sections:
         tag = key
-        content = "\n".join(f"- {l}" if not l.startswith(("-", "P", "F", "A", "I", "M", "S", "O")) else f"- {l}"
-                            for l in lines)
+        content = "\n".join(f"- {line}" for line in lines)
         if key in ("questions", "steps"):
-            content = "\n".join(f"{i+1}. {l}" for i, l in enumerate(lines))
+            content = "\n".join(
+                f"{line_number}. {line}" for line_number, line in enumerate(lines, start=1)
+            )
         parts.append(f"<{tag}>\n{content}\n</{tag}>")
     return "\n\n".join(parts)
 
 
-def format_chatgpt(sections: list[tuple[str, list[str]]], lang: str,
-                    rng: random.Random) -> str:
+def format_chatgpt(sections: list[tuple[str, list[str]]], lang: str, rng: random.Random) -> str:
     parts = []
     for key, lines in sections:
         label = _L(lang, key)
         if key in ("steps", "acceptance", "questions"):
-            content = "\n".join(f"{i+1}. {l}" for i, l in enumerate(lines))
+            content = "\n".join(
+                f"{line_number}. {line}" for line_number, line in enumerate(lines, start=1)
+            )
         else:
-            content = "\n".join(f"- {l}" for l in lines)
+            content = "\n".join(f"- {line}" for line in lines)
         parts.append(f"## {label}\n{content}")
     return "\n\n".join(parts)
 
 
-def format_cursor(sections: list[tuple[str, list[str]]], lang: str,
-                   rng: random.Random) -> str:
+def format_cursor(sections: list[tuple[str, list[str]]], lang: str, rng: random.Random) -> str:
     parts = []
     counter = 1
     for key, lines in sections:
         if key in ("task", "goal", "role", "background"):
             parts.append("\n".join(lines))
         elif key in ("steps",):
-            for l in lines:
-                parts.append(f"{counter}. {l}")
+            for line in lines:
+                parts.append(f"{counter}. {line}")
                 counter += 1
         elif key == "dont":
-            parts.append("Do not: " + ", ".join(l.lower().lstrip("- ") for l in lines) + ".")
+            exclusions = ", ".join(line.lower().lstrip("- ") for line in lines)
+            parts.append(f"Do not: {exclusions}.")
         elif key in ("constraints", "acceptance"):
-            for l in lines:
-                parts.append(f"{counter}. {l}")
+            for line in lines:
+                parts.append(f"{counter}. {line}")
                 counter += 1
         else:
             label = _L(lang, key)
             parts.append(f"\n{label}:")
-            for l in lines:
-                parts.append(f"  - {l}")
+            for line in lines:
+                parts.append(f"  - {line}")
     return "\n".join(parts)
 
 
-def format_generic(sections: list[tuple[str, list[str]]], lang: str,
-                    rng: random.Random) -> str:
+def format_generic(sections: list[tuple[str, list[str]]], lang: str, rng: random.Random) -> str:
     variant = rng.choice(["md", "plain", "compact"])
 
     if variant == "md":
@@ -1448,8 +2526,8 @@ def format_generic(sections: list[tuple[str, list[str]]], lang: str,
         for key, lines in sections:
             label = _L(lang, key).upper()
             parts.append(f"{label}:")
-            for l in lines:
-                parts.append(f"  {l}")
+            for line in lines:
+                parts.append(f"  {line}")
             parts.append("")
         return "\n".join(parts)
 
@@ -1457,14 +2535,18 @@ def format_generic(sections: list[tuple[str, list[str]]], lang: str,
 FORMATTERS = {
     "claude-code": format_claude_code,
     "chatgpt": format_chatgpt,
+    "codex": format_generic,
     "cursor": format_cursor,
+    "deepseek": format_chatgpt,
+    "gemini": format_chatgpt,
+    "github-copilot": format_cursor,
+    "grok": format_chatgpt,
     "generic": format_generic,
 }
 
 
-# ---------------------------------------------------------------------------
 # Giris promptu uretici
-# ---------------------------------------------------------------------------
+
 
 def pick_topic(lang: str, rng: random.Random) -> tuple[str, str]:
     """Rastgele bir konu sec. (topic, category) dondurur."""
@@ -1474,8 +2556,9 @@ def pick_topic(lang: str, rng: random.Random) -> tuple[str, str]:
     return rng.choice(lang_topics), category
 
 
-def make_raw_input(topic: str, lang: str, style: str, rng: random.Random,
-                   *, add_urgency: bool = False) -> str:
+def make_raw_input(
+    topic: str, lang: str, style: str, rng: random.Random, *, add_urgency: bool = False
+) -> str:
     pool = RAW_STYLES.get(style, RAW_STYLES["terse"])
     lang_pool = pool.get(lang, pool["en"])
     raw = rng.choice(lang_pool).format(topic=topic)
@@ -1487,9 +2570,8 @@ def make_raw_input(topic: str, lang: str, style: str, rng: random.Random,
     return raw
 
 
-# ---------------------------------------------------------------------------
 # Enrichment (zenginlestirme) katmani
-# ---------------------------------------------------------------------------
+
 
 def maybe_add_system_prompt(rng: random.Random, lang: str) -> str | None:
     if rng.random() < 0.25:
@@ -1512,9 +2594,8 @@ def maybe_add_context(rng: random.Random, lang: str) -> str | None:
     return None
 
 
-# ---------------------------------------------------------------------------
 # Tek ornek uretimi
-# ---------------------------------------------------------------------------
+
 
 def generate_one(lang: str, target: str, rng: random.Random) -> dict | None:
     topic, category = pick_topic(lang, rng)
@@ -1605,9 +2686,8 @@ def generate_one(lang: str, target: str, rng: random.Random) -> dict | None:
     }
 
 
-# ---------------------------------------------------------------------------
 # CLI
-# ---------------------------------------------------------------------------
+
 
 @click.command()
 @click.option("--count", "-n", default=100_000, help="Uretilecek ornek sayisi")
@@ -1674,9 +2754,9 @@ def main(count: int, seed: int, lang: str | None, target: str | None, output: st
     console.print(f"\n[green]{written:,} ornek yazildi -> {out_path}[/green]\n")
 
     console.print("[bold]Dil dagilimi:[/bold]")
-    for l in sorted(LANGS):
-        if l in stats:
-            console.print(f"  {l}: {stats[l]:,}")
+    for lang_code in sorted(LANGS):
+        if lang_code in stats:
+            console.print(f"  {lang_code}: {stats[lang_code]:,}")
 
     console.print("\n[bold]Hedef dagilimi:[/bold]")
     for t in TARGETS:
@@ -1699,10 +2779,10 @@ def main(count: int, seed: int, lang: str | None, target: str | None, output: st
     q = stats.get("with_questions", 0)
     s = stats.get("with_system_prompt", 0)
     c = stats.get("with_context", 0)
-    console.print(f"\n[bold]Zenginlikler:[/bold]")
-    console.print(f"  Sorulu: {q:,} ({100*q/max(written,1):.1f}%)")
-    console.print(f"  Sistem promptlu: {s:,} ({100*s/max(written,1):.1f}%)")
-    console.print(f"  Baglamli: {c:,} ({100*c/max(written,1):.1f}%)")
+    console.print("\n[bold]Zenginlikler:[/bold]")
+    console.print(f"  Sorulu: {q:,} ({100 * q / max(written, 1):.1f}%)")
+    console.print(f"  Sistem promptlu: {s:,} ({100 * s / max(written, 1):.1f}%)")
+    console.print(f"  Baglamli: {c:,} ({100 * c / max(written, 1):.1f}%)")
 
 
 if __name__ == "__main__":

@@ -2,15 +2,17 @@ model:
   path: null
   backend: llama
 target: generic
+task: auto
+detail: balanced
 generate:
-  max_new_tokens: 512
-  temperature: 0.7
+  max_new_tokens: 1024
+  temperature: 0.3
   top_p: 0.9
   repeat_penalty: 1.05
 llama:
   cli_binary: llama-cli
   n_gpu_layers: 33
-  ctx_size: 4096
+  ctx_size: 8192
 log:
   level: INFO
   file: null

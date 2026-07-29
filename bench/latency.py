@@ -36,14 +36,16 @@ def run(runs: int = 20, target: str = "generic") -> None:
         start = time.perf_counter()
         proc = subprocess.run(
             ["clarify-prompt", "-t", target, prompt],
-            capture_output=True, text=True, check=False,
+            capture_output=True,
+            text=True,
+            check=False,
         )
         elapsed = time.perf_counter() - start
         if proc.returncode != 0:
-            console.print(f"[red]run {i+1} failed: {proc.stderr.strip()[:200]}[/red]")
+            console.print(f"[red]run {i + 1} failed: {proc.stderr.strip()[:200]}[/red]")
             continue
         times.append(elapsed)
-        console.log(f"run {i+1:2d}: {elapsed:.2f}s")
+        console.log(f"run {i + 1:2d}: {elapsed:.2f}s")
 
     if not times:
         console.print("[red]No successful runs.[/red]")

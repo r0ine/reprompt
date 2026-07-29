@@ -18,13 +18,18 @@ from clarify_prompt.errors import ConfigError
 def load_config(
     target_override: str | None = None,
     model_override: str | None = None,
+    task_override: str | None = None,
+    detail_override: str | None = None,
 ) -> Config:
     merged = _load_defaults()
     _merge(merged, _load_user_yaml())
     _merge(merged, _load_env())
     if target_override is not None:
-        merged.setdefault("target", None)
         merged["target"] = target_override
+    if task_override is not None:
+        merged["task"] = task_override
+    if detail_override is not None:
+        merged["detail"] = detail_override
     if model_override is not None:
         merged.setdefault("model", {})
         merged["model"]["path"] = model_override
@@ -59,6 +64,10 @@ def _load_env() -> dict[str, Any]:
         env.setdefault("model", {})["path"] = v
     if v := os.environ.get("CLARIFY_PROMPT_TARGET"):
         env["target"] = v
+    if v := os.environ.get("CLARIFY_PROMPT_TASK"):
+        env["task"] = v
+    if v := os.environ.get("CLARIFY_PROMPT_DETAIL"):
+        env["detail"] = v
     if v := os.environ.get("CLARIFY_PROMPT_LOG_LEVEL"):
         env.setdefault("log", {})["level"] = v
     if v := os.environ.get("CLARIFY_PROMPT_LLAMA_BIN"):

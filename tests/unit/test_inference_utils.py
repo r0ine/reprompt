@@ -10,13 +10,16 @@ from pathlib import Path
 
 import pytest
 
+from clarify_prompt.prompts.types import TARGET_PROFILES
+
 spm = pytest.importorskip("sentencepiece", reason="sentencepiece kurulu degil")
 
 TOK_PATH = Path("training/tokenizer/clarify_tok.model")
 
 
-def build_prompt_tokens(raw_input: str, target: str,
-                        tokenizer: spm.SentencePieceProcessor) -> list[int]:
+def build_prompt_tokens(
+    raw_input: str, target: str, tokenizer: spm.SentencePieceProcessor
+) -> list[int]:
     bos = tokenizer.PieceToId("<|bos|>")
     im_start = tokenizer.PieceToId("<|im_start|>")
     im_end = tokenizer.PieceToId("<|im_end|>")
@@ -58,7 +61,7 @@ class TestBuildPromptTokens:
         assert tokens[0] == bos_id
 
     def test_contains_target_token(self, tokenizer):
-        for target in ("claude-code", "chatgpt", "cursor", "generic"):
+        for target in TARGET_PROFILES:
             tokens = build_prompt_tokens("hello", target, tokenizer)
             target_id = tokenizer.PieceToId(f"<|{target}|>")
             if target_id != tokenizer.unk_id():

@@ -19,9 +19,15 @@ class VramSnapshotCallback(TrainerCallback):
             return
         try:
             out = subprocess.run(
-                ["nvidia-smi", "--query-gpu=memory.used,memory.total,utilization.gpu",
-                 "--format=csv,noheader,nounits"],
-                capture_output=True, text=True, timeout=5, check=False,
+                [
+                    "nvidia-smi",
+                    "--query-gpu=memory.used,memory.total,utilization.gpu",
+                    "--format=csv,noheader,nounits",
+                ],
+                capture_output=True,
+                text=True,
+                timeout=5,
+                check=False,
             )
             if out.returncode == 0:
                 console.log(f"[step {state.global_step}] VRAM: {out.stdout.strip()}")
