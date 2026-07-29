@@ -1,0 +1,735 @@
+{
+  "kok": "Acik kaynak 'prompt engineer AI' projesi: kullanicinin ham/eksik promptunu hedef LLM (Claude Code, ChatGPT, Cursor vb.) icin optimize edilmis, net, baglam-zengin, ornekli prompta ceviren kucuk (3B-8B) fine-tune edilmis acik kaynak LLM. Donanim sinirlari: RTX 4060 8GB VRAM + 16GB RAM (LoRA/QLoRA sart, tam fine-tune degil). MVP kapsami: veri seti tasarimi ve toplama, base model secimi (Qwen 2.5 / Llama 3.2 / Phi / Gemma ailelerinden), LoRA/QLoRA fine-tune (unsloth veya axolotl), degerlendirme (LLM-as-judge + kullanici A/B), inference (GGUF + llama.cpp veya vLLM), acik kaynak release (HF Hub + GitHub + MIT/Apache lisans), basit CLI kullanim. Entegrasyon (MCP server, Claude Code plugin) Faz 2'ye birakildi. Cikti: teknik plan degil, gercek uygulama planidir - kod, egitim scriptleri, degerlendirme scriptleri hepsi somut olarak tanimlanmali.",
+  "olculer": {
+    "tur": 30,
+    "dal": 4,
+    "derinlik": 6,
+    "model": "deepseek-flash"
+  },
+  "toplamDugum": 69,
+  "nodes": [
+    {
+      "id": 0,
+      "parent": null,
+      "depth": 0,
+      "tur": "hedef",
+      "baslik": "Acik kaynak 'prompt engineer AI' projesi: kullanicinin ham/eksik promptunu hedef LLM (Claude Code, ChatGPT, Cursor vb.) icin optimize edilmis, net, baglam-zengin, ornekli prompta ceviren kucuk (3B-8B) fine-tune edilmis acik kaynak LLM. Donanim sinirlari: RTX 4060 8GB VRAM + 16GB RAM (LoRA/QLoRA sart, tam fine-tune degil). MVP kapsami: veri seti tasarimi ve toplama, base model secimi (Qwen 2.5 / Llama 3.2 / Phi / Gemma ailelerinden), LoRA/QLoRA fine-tune (unsloth veya axolotl), degerlendirme (LLM-as-judge + kullanici A/B), inference (GGUF + llama.cpp veya vLLM), acik kaynak release (HF Hub + GitHub + MIT/Apache lisans), basit CLI kullanim. Entegrasyon (MCP server, Claude Code plugin) Faz 2'ye birakildi. Cikti: teknik plan degil, gercek uygulama planidir - kod, egitim scriptleri, degerlendirme scriptleri hepsi somut olarak tanimlanmali.",
+      "aciklama": "Kok hedef",
+      "expanded": true,
+      "cocuklar": [
+        1,
+        2,
+        3,
+        4
+      ]
+    },
+    {
+      "id": 1,
+      "parent": 0,
+      "depth": 1,
+      "tur": "hedef",
+      "baslik": "Veri seti tasarimi ve toplama",
+      "aciklama": "Ham promptlardan hedef LLM icin optimize edilmis promptlara donusum orneklerinden olusan egitim veri setini tasarla ve topla.",
+      "expanded": true,
+      "cocuklar": [
+        5,
+        6,
+        7,
+        8
+      ]
+    },
+    {
+      "id": 2,
+      "parent": 0,
+      "depth": 1,
+      "tur": "hedef",
+      "baslik": "Base model secimi ve fine-tune pipeline",
+      "aciklama": "Qwen2.5/Llama3.2/Phi/Gemma ailelerinden uygun modeli sec, LoRA/QLoRA ile fine-tune icin Unsloth veya Axolotl kullanarak egitim scriptini olustur.",
+      "expanded": true,
+      "cocuklar": [
+        9,
+        10,
+        11,
+        12
+      ]
+    },
+    {
+      "id": 3,
+      "parent": 0,
+      "depth": 1,
+      "tur": "hedef",
+      "baslik": "Degerlendirme ve inference altyapisi",
+      "aciklama": "LLM-as-judge ve kullanici A/B testi ile model kalitesini olc, GGUF+llama.cpp veya vLLM ile inference yap, basit CLI kullanimini sagla.",
+      "expanded": true,
+      "cocuklar": [
+        13,
+        14,
+        15,
+        16
+      ]
+    },
+    {
+      "id": 4,
+      "parent": 0,
+      "depth": 1,
+      "tur": "hedef",
+      "baslik": "Acik kaynak release ve dokumantasyon",
+      "aciklama": "Modeli HF Hub'a, kodlari GitHub'a yayinla, MIT/Apache lisansi sec, kullanim dokumantasyonu ve ornekler ekle.",
+      "expanded": true,
+      "cocuklar": [
+        17,
+        18,
+        19,
+        20
+      ]
+    },
+    {
+      "id": 5,
+      "parent": 1,
+      "depth": 2,
+      "tur": "gorev",
+      "baslik": "Prompt dönüşüm şablonlarının oluşturulması",
+      "aciklama": "Her bir hedef LLM için ham prompttan optimize prompta dönüşüm kurallarını ve şablonlarını tanımla.",
+      "expanded": true,
+      "cocuklar": [
+        21,
+        22,
+        23,
+        24
+      ]
+    },
+    {
+      "id": 6,
+      "parent": 1,
+      "depth": 2,
+      "tur": "gorev",
+      "baslik": "Ham prompt örneklerinin toplanması",
+      "aciklama": "Gerçek kullanıcı promptları veya sentetik veri üretimi ile en az 1000 ham prompt örneği topla.",
+      "expanded": true,
+      "cocuklar": [
+        25,
+        26,
+        27,
+        28
+      ]
+    },
+    {
+      "id": 7,
+      "parent": 1,
+      "depth": 2,
+      "tur": "karar",
+      "baslik": "Veri seti boyutu ve çeşitliliği",
+      "aciklama": "Eğitim veri setinin kaç örnekten oluşacağına ve hangi prompt türlerini (kod, yazı, analiz) kapsayacağına karar ver.",
+      "expanded": false
+    },
+    {
+      "id": 8,
+      "parent": 1,
+      "depth": 2,
+      "tur": "gorev",
+      "baslik": "Veri seti formatlama ve bölme işlemleri",
+      "aciklama": "Toplanan verileri JSONL formatına dönüştür, eğitim/doğrulama/test olarak ayır ve kalite kontrolü yap.",
+      "expanded": true
+    },
+    {
+      "id": 9,
+      "parent": 2,
+      "depth": 2,
+      "tur": "karar",
+      "baslik": "Hedef model ailesi ve boyutunun secimi",
+      "aciklama": "Qwen2.5, Llama3.2, Phi, Gemma ailelerinden 3B-8B araliginda, 8GB VRAM ve 16GB RAM'e uygun modeli belirle (ornegin Qwen2.5-3B-Instruct).",
+      "expanded": false
+    },
+    {
+      "id": 10,
+      "parent": 2,
+      "depth": 2,
+      "tur": "gorev",
+      "baslik": "Fine-tune veri setinin formatlanmasi",
+      "aciklama": "Toplanan prompt-cevap orneklerini Unsloth/Axolotl'un bekledigi formata (Alpaca, ShareGPT veya chat template) donusturup train/validation/test olarak ayir.",
+      "expanded": true,
+      "cocuklar": [
+        29,
+        30,
+        31,
+        32
+      ]
+    },
+    {
+      "id": 11,
+      "parent": 2,
+      "depth": 2,
+      "tur": "gorev",
+      "baslik": "LoRA/QLoRA egitim scriptinin yazilmasi",
+      "aciklama": "Unsloth veya Axolotl ile LoRA rank, alpha, target modules, quantization (4-bit NF4) parametrelerini iceren egitim scriptini olustur ve RTX 4060'da calisabilirligini dogrula.",
+      "expanded": true,
+      "cocuklar": [
+        33,
+        34,
+        35,
+        36
+      ]
+    },
+    {
+      "id": 12,
+      "parent": 2,
+      "depth": 2,
+      "tur": "gorev",
+      "baslik": "Degerlendirme metrigi ve judge scriptinin hazirlanmasi",
+      "aciklama": "LLM-as-judge icin referans model (ornegin GPT-4o-mini) ve kullanici A/B testi icin basit bir karsilastirma scripti yaz, metrik olarak prompt kalitesi skoru belirle.",
+      "expanded": true,
+      "cocuklar": [
+        37,
+        38,
+        39,
+        40
+      ]
+    },
+    {
+      "id": 13,
+      "parent": 3,
+      "depth": 2,
+      "tur": "gorev",
+      "baslik": "LLM-as-judge değerlendirme scripti",
+      "aciklama": "Judge model (ör. GPT-4) kullanarak üretilen promptları puanlayacak ve metrikleri (doğruluk, netlik, bağlam) raporlayacak bir Python scripti yaz.",
+      "expanded": true
+    },
+    {
+      "id": 14,
+      "parent": 3,
+      "depth": 2,
+      "tur": "gorev",
+      "baslik": "Kullanıcı A/B testi altyapısı",
+      "aciklama": "Kullanıcıların iki model çıktısını karşılaştırıp tercihini kaydedecek basit bir web/CLI arayüzü ve veri toplama mekanizması oluştur.",
+      "expanded": true
+    },
+    {
+      "id": 15,
+      "parent": 3,
+      "depth": 2,
+      "tur": "karar",
+      "baslik": "Inference motoru seçimi",
+      "aciklama": "GGUF+llama.cpp ve vLLM arasında VRAM, hız ve kolaylık açısından karşılaştırma yap, MVP için hangisinin kullanılacağına karar ver.",
+      "expanded": false
+    },
+    {
+      "id": 16,
+      "parent": 3,
+      "depth": 2,
+      "tur": "gorev",
+      "baslik": "CLI arayüzü geliştirme",
+      "aciklama": "Kullanıcının ham prompt girmesini, seçilen modeli çalıştırmasını ve optimize edilmiş promptu almasını sağlayan komut satırı aracı (Python argparse) yaz.",
+      "expanded": true,
+      "cocuklar": [
+        41,
+        42,
+        43,
+        44
+      ]
+    },
+    {
+      "id": 17,
+      "parent": 4,
+      "depth": 2,
+      "tur": "gorev",
+      "baslik": "Lisans dosyası ve README oluştur",
+      "aciklama": "MIT veya Apache 2.0 lisansını seç, LICENSE dosyası ekle; README'ye proje amacı, kurulum, kullanım ve referansları yaz.",
+      "expanded": true,
+      "cocuklar": [
+        45,
+        46,
+        47,
+        48
+      ]
+    },
+    {
+      "id": 18,
+      "parent": 4,
+      "depth": 2,
+      "tur": "gorev",
+      "baslik": "Modeli Hugging Face Hub'a yükle",
+      "aciklama": "Fine-tune edilmiş model ağırlıklarını (GGUF veya safetensors) HF Hub'da yeni bir repo'ya push et; model kartına eğitim detayları, benchmark sonuçları ve örnek promptları ekle.",
+      "expanded": true
+    },
+    {
+      "id": 19,
+      "parent": 4,
+      "depth": 2,
+      "tur": "gorev",
+      "baslik": "GitHub deposunu düzenle ve kodları yayınla",
+      "aciklama": "GitHub'da yeni repo oluştur; fine-tune scriptleri, değerlendirme scriptleri, CLI aracı, requirements.txt ve setup.py dosyalarını yükle; .gitignore ekle.",
+      "expanded": true
+    },
+    {
+      "id": 20,
+      "parent": 4,
+      "depth": 2,
+      "tur": "gorev",
+      "baslik": "Kullanım dokümantasyonu ve örnekler hazırla",
+      "aciklama": "CLI kullanım kılavuzu, örnek girdi-çıktı çiftleri, farklı LLM'ler için uyarlama notları ve hızlı başlangıç rehberi yaz; docs/ klasörüne ekle.",
+      "expanded": true
+    },
+    {
+      "id": 21,
+      "parent": 5,
+      "depth": 3,
+      "tur": "gorev",
+      "baslik": "Her hedef LLM için şablon yapısının tanımlanması",
+      "aciklama": "Claude Code, ChatGPT, Cursor gibi her LLM için optimize prompt şablonunun yapısını (sistem mesajı, kullanıcı mesajı, format kuralları) belirle.",
+      "expanded": true,
+      "cocuklar": [
+        49,
+        50,
+        51,
+        52
+      ]
+    },
+    {
+      "id": 22,
+      "parent": 5,
+      "depth": 3,
+      "tur": "gorev",
+      "baslik": "Dönüşüm kuralları kütüphanesinin oluşturulması",
+      "aciklama": "Ham prompttaki eksik bağlam, net olmayan talimat, örnek eksikliği gibi yaygın sorunları gidermek için kural tabanlı dönüşüm şablonları yaz.",
+      "expanded": true
+    },
+    {
+      "id": 23,
+      "parent": 5,
+      "depth": 3,
+      "tur": "karar",
+      "baslik": "Şablon formatının seçilmesi",
+      "aciklama": "Şablonların JSON, YAML veya metin yer tutuculu bir formatta mı saklanacağına karar ver; örn. {context}, {instruction}, {examples} gibi.",
+      "expanded": false
+    },
+    {
+      "id": 24,
+      "parent": 5,
+      "depth": 3,
+      "tur": "gorev",
+      "baslik": "Her LLM için prompt optimizasyon kılavuzunun derlenmesi",
+      "aciklama": "Claude'ın XML etiketleri, ChatGPT'nin markdown, Cursor'ın kod bağlamı gibi hedef LLM'lerin prompt tercihlerini araştırıp şablonlara yansıt.",
+      "expanded": true
+    },
+    {
+      "id": 25,
+      "parent": 6,
+      "depth": 3,
+      "tur": "gorev",
+      "baslik": "Gerçek kullanıcı prompt kaynaklarının belirlenmesi",
+      "aciklama": "İnternet forumları, açık kaynak veri setleri veya gönüllü katkıları gibi gerçek kullanıcı promptlarının toplanacağı kaynakları tespit et.",
+      "expanded": true
+    },
+    {
+      "id": 26,
+      "parent": 6,
+      "depth": 3,
+      "tur": "gorev",
+      "baslik": "Sentetik prompt üretimi için şablonlar oluşturma",
+      "aciklama": "Farklı LLM kullanım senaryolarını kapsayan sentetik prompt örnekleri üretmek için şablonlar ve varyasyonlar hazırla.",
+      "expanded": true
+    },
+    {
+      "id": 27,
+      "parent": 6,
+      "depth": 3,
+      "tur": "gorev",
+      "baslik": "Toplanan promptların filtrelenmesi ve kalite kontrolü",
+      "aciklama": "Kopyaları kaldır, anlamsız veya çok kısa promptları ele ve en az 1000 geçerli örnek bırak.",
+      "expanded": true
+    },
+    {
+      "id": 28,
+      "parent": 6,
+      "depth": 3,
+      "tur": "karar",
+      "baslik": "Veri depolama formatı ve etiketleme şemasının seçimi",
+      "aciklama": "Promptları JSON veya CSV formatında saklama ve her birine kaynak, hedef model gibi etiketler ekleme kararını ver.",
+      "expanded": false
+    },
+    {
+      "id": 29,
+      "parent": 10,
+      "depth": 3,
+      "tur": "karar",
+      "baslik": "Format seçimi",
+      "aciklama": "Unsloth/Axolotl için Alpaca, ShareGPT veya chat template formatlarından hangisinin kullanılacağına karar ver.",
+      "expanded": false
+    },
+    {
+      "id": 30,
+      "parent": 10,
+      "depth": 3,
+      "tur": "gorev",
+      "baslik": "Dönüştürme scripti yaz",
+      "aciklama": "Toplanan ham veriyi seçilen formata dönüştüren bir Python scripti oluştur.",
+      "expanded": true
+    },
+    {
+      "id": 31,
+      "parent": 10,
+      "depth": 3,
+      "tur": "gorev",
+      "baslik": "Eğitim/doğrulama/test ayrımı",
+      "aciklama": "Veri setini %80 eğitim, %10 doğrulama, %10 test olacak şekilde böl ve ayrı dosyalara kaydet.",
+      "expanded": true
+    },
+    {
+      "id": 32,
+      "parent": 10,
+      "depth": 3,
+      "tur": "gorev",
+      "baslik": "Format doğrulama",
+      "aciklama": "Formatlanmış verinin alan yapısını, token uzunluğunu ve örneklerin geçerliliğini kontrol et.",
+      "expanded": true,
+      "cocuklar": [
+        53,
+        54,
+        55,
+        56
+      ]
+    },
+    {
+      "id": 33,
+      "parent": 11,
+      "depth": 3,
+      "tur": "gorev",
+      "baslik": "Unsloth/Axolotl kutuphanesinin kurulumu ve dogrulugu",
+      "aciklama": "Unsloth veya Axolotl'u pip ile kur, surumunu sabitle ve RTX 4060'da import edilebilirligini dogrula.",
+      "expanded": true,
+      "cocuklar": [
+        57,
+        58,
+        59,
+        60
+      ]
+    },
+    {
+      "id": 34,
+      "parent": 11,
+      "depth": 3,
+      "tur": "gorev",
+      "baslik": "LoRA hiperparametrelerinin (rank, alpha, target_modules) secimi ve script'e eklenmesi",
+      "aciklama": "LoRA rank (ornegin 8-16), alpha (ornegin 16-32) ve target modules (q_proj, v_proj vb.) degerlerini belirle ve egitim scriptinde tanimla.",
+      "expanded": true,
+      "cocuklar": [
+        61,
+        62,
+        63,
+        64
+      ]
+    },
+    {
+      "id": 35,
+      "parent": 11,
+      "depth": 3,
+      "tur": "gorev",
+      "baslik": "4-bit NF4 quantization konfigurasyonunun script'e eklenmesi",
+      "aciklama": "Bitsandbytes 4-bit NF4 quantization ayarlarini (compute_dtype, bnb_4bit_use_double_quant) model yukleme koduna ekle.",
+      "expanded": true,
+      "cocuklar": [
+        65,
+        66,
+        67,
+        68
+      ]
+    },
+    {
+      "id": 36,
+      "parent": 11,
+      "depth": 3,
+      "tur": "gorev",
+      "baslik": "Egitim scriptinde bellek yonetimi ayarlarinin eklenmesi",
+      "aciklama": "RTX 4060 8GB VRAM icin gradient checkpointing, per_device_train_batch_size (ornegin 1-2) ve gradient_accumulation_steps ayarlarini script'e ekle.",
+      "expanded": false
+    },
+    {
+      "id": 37,
+      "parent": 12,
+      "depth": 3,
+      "tur": "karar",
+      "baslik": "LLM-as-judge referans model secimi",
+      "aciklama": "Hangi modelin (GPT-4o-mini, GPT-4, Claude 3.5, veya acik kaynak bir model) jude olarak kullanilacagina karar ver.",
+      "expanded": false
+    },
+    {
+      "id": 38,
+      "parent": 12,
+      "depth": 3,
+      "tur": "ozellik",
+      "baslik": "Prompt kalitesi metrik tanimi",
+      "aciklama": "Prompt'un netlik, baglam zenginligi, ornek icerme, hedef LLM uyumu gibi boyutlarini olcen skorlama kriterlerini belirle.",
+      "expanded": false
+    },
+    {
+      "id": 39,
+      "parent": 12,
+      "depth": 3,
+      "tur": "gorev",
+      "baslik": "Judge scriptinin yazilmasi",
+      "aciklama": "Secilen referans modeli cagirip promptlari degerlendiren, metrik skorlarini donduren bir Python scripti olustur.",
+      "expanded": false
+    },
+    {
+      "id": 40,
+      "parent": 12,
+      "depth": 3,
+      "tur": "gorev",
+      "baslik": "Kullanici A/B test mekanizmasi",
+      "aciklama": "Iki farkli model ciktisini karsilastirip kullanicinin tercihini kaydeden basit bir CLI veya web arayuzu scripti yaz.",
+      "expanded": false
+    },
+    {
+      "id": 41,
+      "parent": 16,
+      "depth": 3,
+      "tur": "gorev",
+      "baslik": "Argüman ayrıştırma ve giriş doğrulama",
+      "aciklama": "Python argparse ile ham prompt, model seçeneği (varsayılan model yolu), çıktı formatı (düz metin/JSON) argümanlarını tanımla ve giriş doğrula.",
+      "expanded": false
+    },
+    {
+      "id": 42,
+      "parent": 16,
+      "depth": 3,
+      "tur": "gorev",
+      "baslik": "Model yükleme ve çıkarım entegrasyonu",
+      "aciklama": "Seçilen GGUF modelini llama.cpp (ctypes) veya vLLM API ile yükleyen, ham promptu işleyip optimize promptu döndüren bir fonksiyon yaz.",
+      "expanded": false
+    },
+    {
+      "id": 43,
+      "parent": 16,
+      "depth": 3,
+      "tur": "gorev",
+      "baslik": "Çıktı biçimlendirme ve görüntüleme",
+      "aciklama": "Modelden gelen ham yanıtı temizle, isteğe bağlı renklendirme (rich veya colorama) ile kullanıcıya göster; JSON çıktı seçeneğini destekle.",
+      "expanded": false
+    },
+    {
+      "id": 44,
+      "parent": 16,
+      "depth": 3,
+      "tur": "gorev",
+      "baslik": "Hata yönetimi ve günlükleme",
+      "aciklama": "Model yüklenememesi, bellek yetersizliği, geçersiz giriş gibi durumlar için try/except blokları ekle; hata mesajlarını stderr'e yaz ve isteğe bağlı log dosyası oluştur.",
+      "expanded": false
+    },
+    {
+      "id": 45,
+      "parent": 17,
+      "depth": 3,
+      "tur": "karar",
+      "baslik": "Lisans türü seçimi",
+      "aciklama": "MIT ile Apache 2.0 arasında seçim yap; Apache 2.0 patent koruması sunar, MIT daha basittir.",
+      "expanded": false
+    },
+    {
+      "id": 46,
+      "parent": 17,
+      "depth": 3,
+      "tur": "gorev",
+      "baslik": "LICENSE dosyası oluştur",
+      "aciklama": "Seçilen lisansın metnini (MIT veya Apache 2.0) proje köküne LICENSE dosyası olarak ekle.",
+      "expanded": false
+    },
+    {
+      "id": 47,
+      "parent": 17,
+      "depth": 3,
+      "tur": "gorev",
+      "baslik": "README giriş bölümü yaz",
+      "aciklama": "Proje amacı, özellikler ve hedef kitleyi açıklayan kısa bir giriş paragrafı ekle.",
+      "expanded": false
+    },
+    {
+      "id": 48,
+      "parent": 17,
+      "depth": 3,
+      "tur": "gorev",
+      "baslik": "Kurulum ve kullanım kılavuzu yaz",
+      "aciklama": "CLI kurulum adımları, bağımlılıklar ve temel kullanım örneği ile örnek prompt dönüşümü göster.",
+      "expanded": false
+    },
+    {
+      "id": 49,
+      "parent": 21,
+      "depth": 4,
+      "tur": "gorev",
+      "baslik": "Her LLM'in resmi prompt yapısını araştırma",
+      "aciklama": "Claude Code, ChatGPT, Cursor gibi hedef LLM'lerin dokümantasyonundan sistem mesajı, kullanıcı mesajı ve format kurallarını çıkar.",
+      "expanded": false
+    },
+    {
+      "id": 50,
+      "parent": 21,
+      "depth": 4,
+      "tur": "karar",
+      "baslik": "Şablonların ortak mı yoksa LLM'e özel mi olacağına karar verme",
+      "aciklama": "Tüm LLM'ler için tek bir soyut şablon mu kullanılacak yoksa her LLM'e ayrı şablon mu tanımlanacak? Seçim yap.",
+      "expanded": false
+    },
+    {
+      "id": 51,
+      "parent": 21,
+      "depth": 4,
+      "tur": "gorev",
+      "baslik": "Her LLM için sistem ve kullanıcı mesajı formatını belirleme",
+      "aciklama": "Her bir hedef LLM'in beklediği sistem mesajı rolü, kullanıcı mesajı yapısı ve olası özel etiketleri (ör. Claude'da <task> gibi) tanımla.",
+      "expanded": false
+    },
+    {
+      "id": 52,
+      "parent": 21,
+      "depth": 4,
+      "tur": "risk",
+      "baslik": "LLM güncellemeleri nedeniyle şablonların geçersiz kalma riski",
+      "aciklama": "Hedef LLM'lerin API veya prompt yapılarını değiştirmesi durumunda şablonların güncellenmesi gerekebilir; bu riski yönet.",
+      "expanded": false
+    },
+    {
+      "id": 53,
+      "parent": 32,
+      "depth": 4,
+      "tur": "gorev",
+      "baslik": "Alan yapısı doğrulama",
+      "aciklama": "Her örneğin beklenen alanlara (instruction, input, output, system_prompt vb.) sahip olduğunu ve türlerinin doğru olduğunu kontrol et.",
+      "expanded": false
+    },
+    {
+      "id": 54,
+      "parent": 32,
+      "depth": 4,
+      "tur": "gorev",
+      "baslik": "Token uzunluğu ve kesme kontrolü",
+      "aciklama": "Örneklerin token sayısını modelin maksimum bağlam uzunluğuyla karşılaştır, sınırı aşanları kes veya işaretle.",
+      "expanded": false
+    },
+    {
+      "id": 55,
+      "parent": 32,
+      "depth": 4,
+      "tur": "gorev",
+      "baslik": "Örnek geçerlilik ve kalite kontrolü",
+      "aciklama": "Boş çıktı, anlamsız metin, yinelenen örnekler gibi hatalı girdileri tespit et ve raporla.",
+      "expanded": false
+    },
+    {
+      "id": 56,
+      "parent": 32,
+      "depth": 4,
+      "tur": "karar",
+      "baslik": "Geçersiz örnekler için işlem politikası",
+      "aciklama": "Geçersiz bulunan örneklerin silineceğine, düzeltileceğine yoksa sadece uyarı verileceğine karar ver.",
+      "expanded": false
+    },
+    {
+      "id": 57,
+      "parent": 33,
+      "depth": 4,
+      "tur": "karar",
+      "baslik": "Unsloth veya Axolotl arasinda secim",
+      "aciklama": "RTX 4060 ve 8GB VRAM icin hangi kutuphanenin LoRA/QLoRA destegi, performansi ve kolayligi daha uygun olduguna karar ver.",
+      "expanded": false
+    },
+    {
+      "id": 58,
+      "parent": 33,
+      "depth": 4,
+      "tur": "gorev",
+      "baslik": "CUDA ve PyTorch surum uyumlulugunu dogrulama",
+      "aciklama": "Mevcut CUDA surumunu (ornegin 12.x) kontrol et, Unsloth/Axolotl ile uyumlu PyTorch surumunu pip ile kur.",
+      "expanded": false
+    },
+    {
+      "id": 59,
+      "parent": 33,
+      "depth": 4,
+      "tur": "gorev",
+      "baslik": "Kutuphaneyi pip ile kur ve surumunu sabitle",
+      "aciklama": "Unsloth veya Axolotl'u requirements.txt'de belirtilen surumle pip install yap, ortami dondur.",
+      "expanded": false
+    },
+    {
+      "id": 60,
+      "parent": 33,
+      "depth": 4,
+      "tur": "gorev",
+      "baslik": "Import ve temel model yukleme testi",
+      "aciklama": "Python'da kutuphaneyi import et, RTX 4060'da kucuk bir model (ornegin 1B) yukleyip LoRA konfigurasyonunu calistirarak dogrula.",
+      "expanded": false
+    },
+    {
+      "id": 61,
+      "parent": 34,
+      "depth": 4,
+      "tur": "karar",
+      "baslik": "LoRA rank ve alpha icin baslangic degerlerini sec",
+      "aciklama": "Literatur ve model boyutuna gore rank (ornegin 8-16) ve alpha (ornegin 16-32) degerlerini belirle.",
+      "expanded": false
+    },
+    {
+      "id": 62,
+      "parent": 34,
+      "depth": 4,
+      "tur": "gorev",
+      "baslik": "Hedef modelin target_modules listesini cikar",
+      "aciklama": "Secilen base modelin (Qwen/Llama/Phi) transformer katmanlarindaki projection matrislerini (q_proj, v_proj, k_proj, o_proj vb.) ogren ve listele.",
+      "expanded": false
+    },
+    {
+      "id": 63,
+      "parent": 34,
+      "depth": 4,
+      "tur": "gorev",
+      "baslik": "Egitim scriptinde LoRA yapilandirmasini kodla",
+      "aciklama": "Unsloth veya Axolotl config dosyasinda rank, alpha, target_modules, dropout gibi parametreleri tanimla ve model yukleme fonksiyonuna ekle.",
+      "expanded": false
+    },
+    {
+      "id": 64,
+      "parent": 34,
+      "depth": 4,
+      "tur": "gorev",
+      "baslik": "Secilen hiperparametrelerle kucuk olcekli dogrulama egitimi calistir",
+      "aciklama": "Az sayida ornekle (ornegin 100 adim) bir test egitimi baslatarak LoRA yapilandirmasinin calistigini ve VRAM sinirlarina uydugunu dogrula.",
+      "expanded": false
+    },
+    {
+      "id": 65,
+      "parent": 35,
+      "depth": 4,
+      "tur": "karar",
+      "baslik": "Bitsandbytes 4-bit parametre degerlerinin secimi",
+      "aciklama": "compute_dtype (float16/bfloat16), bnb_4bit_use_double_quant (True/False) ve bnb_4bit_compute_dtype gibi parametrelerin belirlenmesi.",
+      "expanded": false
+    },
+    {
+      "id": 66,
+      "parent": 35,
+      "depth": 4,
+      "tur": "gorev",
+      "baslik": "BitsAndBytesConfig nesnesinin olusturulmasi ve model yukleme koduna eklenmesi",
+      "aciklama": "Python kodunda BitsAndBytesConfig(load_in_4bit=True, bnb_4bit_quant_type='nf4', ...) tanimlayip model.from_pretrained(... , quantization_config=config) ile entegre et.",
+      "expanded": false
+    },
+    {
+      "id": 67,
+      "parent": 35,
+      "depth": 4,
+      "tur": "gorev",
+      "baslik": "4-bit quantizasyonun bellek kullanimini dogrulama testi",
+      "aciklama": "Egitim scriptini calistirip VRAM kullanimini kontrol eden kucuk bir test yaz, 8GB sinirini asmadigini dogrula.",
+      "expanded": false
+    },
+    {
+      "id": 68,
+      "parent": 35,
+      "depth": 4,
+      "tur": "risk",
+      "baslik": "Unsloth veya Axolotl ile 4-bit NF4 uyumsuzlugu",
+      "aciklama": "Kullanilan fine-tune kutuphanesi (Unsloth/Axolotl) 4-bit NF4 quantization ile tam uyumlu olmayabilir; ek ayar veya workaround gerekebilir.",
+      "expanded": false
+    }
+  ]
+}

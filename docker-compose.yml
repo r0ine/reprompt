@@ -1,0 +1,30 @@
+services:
+  clarify-prompt:
+    build: .
+    ports:
+      - "8741:8741"
+    volumes:
+      - ./models:/models:ro
+    environment:
+      - CLARIFY_PROMPT_MODEL_PATH=/models/clarify-prompt.gguf
+      - CLARIFY_PROMPT_GPU_LAYERS=33
+    restart: unless-stopped
+
+  # GPU variant — uncomment if NVIDIA Container Toolkit is installed
+  # clarify-prompt-gpu:
+  #   build: .
+  #   ports:
+  #     - "8741:8741"
+  #   volumes:
+  #     - ./models:/models:ro
+  #   environment:
+  #     - CLARIFY_PROMPT_MODEL_PATH=/models/clarify-prompt.gguf
+  #     - CLARIFY_PROMPT_GPU_LAYERS=33
+  #   deploy:
+  #     resources:
+  #       reservations:
+  #         devices:
+  #           - driver: nvidia
+  #             count: 1
+  #             capabilities: [gpu]
+  #   restart: unless-stopped

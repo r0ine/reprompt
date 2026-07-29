@@ -1,0 +1,15 @@
+Model artifacts (fine-tuned LoRA adapter, merged weights, GGUF quantizations)
+distributed under this project are released under the Apache License 2.0.
+
+This license applies to the LoRA adapter checkpoints and any derived model
+weights (merged, quantized) released under the clarify-prompt project name.
+The base model (Qwen 2.5 7B Instruct) is licensed under Apache 2.0 by Alibaba
+Cloud; this project respects that license and re-releases the derivative under
+the same terms.
+
+The training data used to produce these models is described in the model card
+(docs/MODEL_CARD.md) and is NOT redistributed with the model weights unless
+the data itself was released under a permissive license by its original
+providers.
+
+Full Apache License 2.0 text: https://www.apache.org/licenses/LICENSE-2.0

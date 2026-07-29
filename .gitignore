@@ -1,0 +1,75 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtualenv
+.venv/
+.train-venv/
+venv/
+env/
+ENV/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Testing / coverage
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+htmlcov/
+.coverage
+.coverage.*
+coverage.xml
+*.cover
+
+# Environment secrets
+.env
+.env.*
+!.env.example
+
+# Training artefacts (agirlik, checkpoint, dataset)
+training/datasets/
+training/outputs/
+training/wandb/
+outputs/
+*.gguf
+*.safetensors
+*.pt
+*.bin
+*.pth
+
+# Bench sonuclari
+bench/results/
+
+# Plan agaci ham cikti (denetim icin lokal tutulur; git'e girmez)
+agac/ham/
+
+# Hugging Face cache (proje icinde tutulursa)
+.cache/

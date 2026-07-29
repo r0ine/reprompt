@@ -1,0 +1,42 @@
+[build-system]
+requires = ["hatchling>=1.24"]
+build-backend = "hatchling.build"
+
+[project]
+name = "clarify-prompt-training"
+version = "0.1.0"
+description = "Training pipeline for clarify-prompt (not installed by end users)."
+requires-python = ">=3.10,<3.13"
+license = { text = "MIT" }
+authors = [{ name = "Kemal", email = "kemgen01@gmail.com" }]
+# Heavy ML deps live here so `pip install clarify-prompt` stays light.
+# Unsloth pinned indirectly via `unsloth[cu124-torch240]` — Windows users must
+# match their CUDA driver. WSL2 fallback path is in scripts/setup_env.sh.
+dependencies = [
+    "transformers>=4.44,<5.0",
+    "trl>=0.10,<1.0",
+    "peft>=0.13,<1.0",
+    "bitsandbytes>=0.43",
+    "accelerate>=0.34",
+    "datasets>=2.20",
+    "huggingface_hub[cli]>=0.24",
+    "hf-transfer>=0.1.6",
+    "anthropic>=0.31",
+    "deepeval>=1.4",
+    "click>=8.1",
+    "pyyaml>=6.0",
+    "pydantic>=2.5",
+    "tenacity>=8.2",
+    "datasketch>=1.6",
+    "matplotlib>=3.9",
+    "rich>=13.7",
+]
+
+[project.optional-dependencies]
+unsloth-cu124 = [
+    "unsloth @ git+https://github.com/unslothai/unsloth.git",
+]
+wandb = ["wandb>=0.17"]
+
+[tool.hatch.build.targets.wheel]
+packages = ["../training"]

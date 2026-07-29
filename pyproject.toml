@@ -1,0 +1,90 @@
+[build-system]
+requires = ["hatchling>=1.24"]
+build-backend = "hatchling.build"
+
+[project]
+name = "clarify-prompt"
+version = "0.1.0"
+description = "Local prompt engineer AI — rewrites your prompts for better LLM output."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { file = "LICENSE" }
+authors = [{ name = "r0ine", email = "r0ine@outlook.com" }]
+keywords = ["llm", "prompt-engineering", "qlora", "lora", "unsloth", "local-inference"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+dependencies = [
+    "click>=8.1",
+    "pydantic>=2.5",
+    "pyyaml>=6.0",
+    "rich>=13.7",
+    "platformdirs>=4.2",
+]
+
+[project.optional-dependencies]
+llama = ["llama-cpp-python>=0.2.79"]
+api = [
+    "fastapi>=0.111",
+    "uvicorn[standard]>=0.30",
+]
+all = [
+    "llama-cpp-python>=0.2.79",
+    "fastapi>=0.111",
+    "uvicorn[standard]>=0.30",
+]
+dev = [
+    "pytest>=8.2",
+    "pytest-cov>=5.0",
+    "ruff>=0.5",
+    "mypy>=1.11",
+    "httpx>=0.27",
+]
+
+[project.scripts]
+clarify-prompt = "clarify_prompt.cli.main:app"
+
+[project.urls]
+Homepage = "https://github.com/r0ine/clarify-prompt"
+Documentation = "https://github.com/r0ine/clarify-prompt/tree/main/docs"
+Repository = "https://github.com/r0ine/clarify-prompt"
+Issues = "https://github.com/r0ine/clarify-prompt/issues"
+Changelog = "https://github.com/r0ine/clarify-prompt/blob/main/CHANGELOG.md"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/clarify_prompt"]
+
+[tool.hatch.build.targets.sdist]
+include = [
+    "src/clarify_prompt",
+    "README.md",
+    "LICENSE",
+    "LICENSE-model",
+    "CHANGELOG.md",
+    "pyproject.toml",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP", "SIM"]
+ignore = ["E501"]
+
+[tool.pytest.ini_options]
+minversion = "8.0"
+testpaths = ["tests"]
+markers = [
+    "slow: integration tests that call real subprocesses (skipped by default in CI)",
+    "gpu: tests that require a CUDA-capable GPU",
+]
+addopts = "-ra --strict-markers"

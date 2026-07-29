@@ -1,0 +1,25 @@
+model:
+  dim: 1280
+  n_layers: 20
+  n_heads: 20
+  n_kv_heads: 4
+  max_seq_len: 1024
+  dropout: 0.05
+  norm_eps: 1.0e-5
+  rope_theta: 10000.0
+  tie_embeddings: true
+
+training:
+  lr: 1.5e-4
+  min_lr: 1.0e-5
+  warmup_steps: 1000
+  epochs: 3
+  batch_size: 2
+  grad_accum: 16
+  max_grad_norm: 1.0
+  save_every: 1000
+  eval_every: 250
+  gradient_checkpointing: true
+  output_dir: training/outputs/scratch-xlarge
+
+tokenizer: training/tokenizer/clarify_tok.model

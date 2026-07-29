@@ -1,0 +1,16 @@
+model:
+  path: null
+  backend: llama
+target: generic
+generate:
+  max_new_tokens: 512
+  temperature: 0.7
+  top_p: 0.9
+  repeat_penalty: 1.05
+llama:
+  cli_binary: llama-cli
+  n_gpu_layers: 33
+  ctx_size: 4096
+log:
+  level: INFO
+  file: null

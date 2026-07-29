@@ -1,0 +1,5 @@
+{"id":"fix_001","input":"reflection kodu patliyor duzelt","target":"claude-code","lang":"tr","expected_keywords":["<task>","<context>","<acceptance>"]}
+{"id":"gen_002","input":"blog yazisi yaz seo hakkinda","target":"chatgpt","lang":"tr","expected_keywords":["Goal","Context","Output format"]}
+{"id":"cur_003","input":"bu componenti temizle","target":"cursor","lang":"tr","expected_keywords":["Extract","Preserve","Do not"]}
+{"id":"gen_004","input":"pandas dataframe deki bos degerleri sil","target":"generic","lang":"tr","expected_keywords":["Goal","Constraints","Reply in the same language"]}
+{"id":"fix_005","input":"npm build hata veriyor bak","target":"claude-code","lang":"tr","expected_keywords":["<task>","<files>","npm"]}
