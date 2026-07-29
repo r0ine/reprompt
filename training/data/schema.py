@@ -7,7 +7,7 @@ from typing import Literal
 
 from pydantic import BaseModel, Field
 
-from clarify_prompt.prompts.types import DetailLevel, TargetProfile, TaskProfile
+from reprompt.prompts.types import DetailLevel, TargetProfile, TaskProfile
 
 Source = Literal["gold", "transcript", "shared", "distill"]
 Lang = Literal["tr", "en", "mix"]

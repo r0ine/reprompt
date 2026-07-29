@@ -5,7 +5,7 @@ from pathlib import Path
 import pytest
 from click.testing import CliRunner
 
-from clarify_prompt.cli.main import app
+from reprompt.cli.main import app
 
 
 class _FakeEngine:
@@ -18,8 +18,8 @@ class _FakeEngine:
 
 @pytest.fixture
 def isolate_config(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
-    monkeypatch.setenv("CLARIFY_PROMPT_CONFIG", str(tmp_path / "empty.yaml"))
-    for env in ["CLARIFY_PROMPT_MODEL_PATH", "CLARIFY_PROMPT_LLAMA_BIN"]:
+    monkeypatch.setenv("REPROMPT_CONFIG", str(tmp_path / "empty.yaml"))
+    for env in ["REPROMPT_MODEL_PATH", "REPROMPT_LLAMA_BIN"]:
         monkeypatch.delenv(env, raising=False)
 
 
@@ -35,17 +35,17 @@ def test_cli_help_lists_targets(isolate_config: None) -> None:
 def test_cli_version(isolate_config: None) -> None:
     result = CliRunner().invoke(app, ["--version"])
     assert result.exit_code == 0
-    assert "clarify-prompt" in result.output
+    assert "reprompt" in result.output
 
 
 def test_cli_empty_prompt_errors(monkeypatch: pytest.MonkeyPatch, isolate_config: None) -> None:
-    monkeypatch.setattr("clarify_prompt.cli.main.make_engine", lambda cfg: _FakeEngine())
+    monkeypatch.setattr("reprompt.cli.main.make_engine", lambda cfg: _FakeEngine())
     result = CliRunner().invoke(app, ["rewrite", ""])
     assert result.exit_code != 0
 
 
 def test_cli_runs_with_fake_engine(monkeypatch: pytest.MonkeyPatch, isolate_config: None) -> None:
-    monkeypatch.setattr("clarify_prompt.cli.main.make_engine", lambda cfg: _FakeEngine("hello"))
+    monkeypatch.setattr("reprompt.cli.main.make_engine", lambda cfg: _FakeEngine("hello"))
     result = CliRunner().invoke(app, ["rewrite", "-t", "generic", "raw request goes here"])
     assert result.exit_code == 0, result.output
     assert "hello" in result.output
@@ -56,7 +56,7 @@ def test_cli_composes_selected_profiles(
     isolate_config: None,
 ) -> None:
     fake_engine = _FakeEngine("rewritten")
-    monkeypatch.setattr("clarify_prompt.cli.main.make_engine", lambda cfg: fake_engine)
+    monkeypatch.setattr("reprompt.cli.main.make_engine", lambda cfg: fake_engine)
 
     captured: dict[str, str] = {}
 
@@ -86,7 +86,7 @@ def test_cli_composes_selected_profiles(
 
 
 def test_shortcut_syntax(monkeypatch: pytest.MonkeyPatch, isolate_config: None) -> None:
-    monkeypatch.setattr("clarify_prompt.cli.main.make_engine", lambda cfg: _FakeEngine("hello"))
+    monkeypatch.setattr("reprompt.cli.main.make_engine", lambda cfg: _FakeEngine("hello"))
     result = CliRunner().invoke(app, ["raw request goes here"])
     assert result.exit_code == 0, result.output
     assert "hello" in result.output

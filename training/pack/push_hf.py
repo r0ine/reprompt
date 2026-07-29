@@ -12,7 +12,7 @@ console = Console()
 
 
 @click.command()
-@click.option("--repo", required=True, help="e.g. clarify/clarify-prompt-qwen2.5-7b-v1")
+@click.option("--repo", required=True, help="e.g. clarify/reprompt-qwen2.5-7b-v1")
 @click.option("--path", type=click.Path(exists=True, path_type=Path), required=True)
 @click.option("--private/--public", default=True)
 def cli(repo: str, path: Path, private: bool) -> None:
@@ -33,7 +33,7 @@ def run(repo: str, path: Path, private: bool = True) -> None:
         repo_id=repo,
         folder_path=str(path),
         path_in_repo=".",
-        commit_message="clarify-prompt release",
+        commit_message="reprompt release",
     )
     console.print(f"[green]done: https://huggingface.co/{repo}[/green]")
 

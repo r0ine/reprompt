@@ -18,8 +18,8 @@ pytestmark = pytest.mark.skipif(not HAS_FASTAPI, reason="fastapi not installed")
 
 @pytest.fixture()
 def client():
-    import clarify_prompt.api.server as srv
-    from clarify_prompt.api.server import app
+    import reprompt.api.server as srv
+    from reprompt.api.server import app
 
     mock_engine = MagicMock()
     mock_result = MagicMock()

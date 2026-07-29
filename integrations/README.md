@@ -1,6 +1,6 @@
 # Entegrasyonlar
 
-clarify-prompt'u her turlu AI platformuyla kullanabilirsin.
+reprompt'u her turlu AI platformuyla kullanabilirsin.
 Tek satir komutla veya API uzerinden — tak ve calistir.
 
 ## Desteklenen platformlar
@@ -18,13 +18,13 @@ Tek satir komutla veya API uzerinden — tak ve calistir.
 ## Nasil calisir
 
 ```
-Kullanici Girdisi ──> clarify-prompt ──> Optimize Edilmis Prompt ──> Hedef LLM
+Kullanici Girdisi ──> reprompt ──> Optimize Edilmis Prompt ──> Hedef LLM
                           │
                     (lokal model)
 ```
 
 1. Kullanici ham bir istek yazar: `"login yap guzel olsun"`
-2. clarify-prompt bunu yapisal bir prompt'a cevirir
+2. reprompt bunu yapisal bir prompt'a cevirir
 3. Optimize edilmis prompt hedef LLM'e gonderilir
 4. LLM daha iyi cikti uretir
 
@@ -32,17 +32,17 @@ Kullanici Girdisi ──> clarify-prompt ──> Optimize Edilmis Prompt ──>
 
 ```bash
 # kur
-pip install clarify-prompt[all]
+pip install reprompt[all]
 
 # CLI
-clarify-prompt "login sayfasi yap" --target chatgpt
+reprompt "login sayfasi yap" --target chatgpt
 
 # API sunucusu
-clarify-prompt serve --port 8741
+reprompt serve --port 8741
 
 # Python
-from clarify_prompt import ClarifyEngine
-engine = ClarifyEngine(model="model.gguf")
+from reprompt import RepromptEngine
+engine = RepromptEngine(model="model.gguf")
 result = engine.rewrite("login yap", target="claude-code")
 ```
 
@@ -53,7 +53,7 @@ result = engine.rewrite("login yap", target="claude-code")
 docker compose up -d
 
 # veya dogrudan
-clarify-prompt serve --port 8741 --model ./models/clarify-prompt.gguf
+reprompt serve --port 8741 --model ./models/reprompt.gguf
 ```
 
 Sunucu basladiktan sonra tum platformlar `http://localhost:8741/v1/rewrite`

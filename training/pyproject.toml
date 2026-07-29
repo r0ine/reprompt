@@ -3,13 +3,13 @@ requires = ["hatchling>=1.24"]
 build-backend = "hatchling.build"
 
 [project]
-name = "clarify-prompt-training"
+name = "reprompt-training"
 version = "0.1.0"
-description = "Training pipeline for clarify-prompt (not installed by end users)."
+description = "Training pipeline for reprompt (not installed by end users)."
 requires-python = ">=3.10,<3.13"
 license = { text = "MIT" }
 authors = [{ name = "Kemal", email = "kemgen01@gmail.com" }]
-# Heavy ML deps live here so `pip install clarify-prompt` stays light.
+# Heavy ML deps live here so `pip install reprompt` stays light.
 # Unsloth pinned indirectly via `unsloth[cu124-torch240]` — Windows users must
 # match their CUDA driver. WSL2 fallback path is in scripts/setup_env.sh.
 dependencies = [

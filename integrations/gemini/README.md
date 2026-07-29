@@ -1,6 +1,6 @@
 # Gemini Entegrasyonu
 
-clarify-prompt'u Google Gemini ile kullanmak icin API proxy yontemi kullanilir.
+reprompt'u Google Gemini ile kullanmak icin API proxy yontemi kullanilir.
 
 ## Python ile kullanim
 
@@ -24,7 +24,7 @@ def ask_gemini(raw_prompt: str) -> str:
 ## curl ile kullanim
 
 ```bash
-# once clarify-prompt ile optimize et
+# once reprompt ile optimize et
 OPTIMIZED=$(curl -s http://localhost:8741/v1/rewrite \
   -H "Content-Type: application/json" \
   -d "{\"prompt\": \"$RAW_PROMPT\", \"target\": \"generic\"}" \
@@ -38,8 +38,8 @@ curl "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:g
 
 ## Google AI Studio ile
 
-1. clarify-prompt'u calistir
-2. Ham prompt'u clarify-prompt'a gonder
+1. reprompt'u calistir
+2. Ham prompt'u reprompt'a gonder
 3. Donen optimize edilmis prompt'u Google AI Studio'ya yapistir
 
 Alternatif: Gemini'nin sistem talimatina su notu ekle:

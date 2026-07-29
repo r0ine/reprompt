@@ -1,27 +1,27 @@
-# clarify-prompt entegrasyonu
+# reprompt entegrasyonu
 
-Bu proje clarify-prompt kullanir. Her gorev basinda kullanicinin ham girdisini
-clarify-prompt ile yeniden yaz, sonra yeniden yazilmis haliyle calis.
+Bu proje reprompt kullanir. Her gorev basinda kullanicinin ham girdisini
+reprompt ile yeniden yaz, sonra yeniden yazilmis haliyle calis.
 
 ## Kurulum
 
 ```bash
-pip install clarify-prompt[llama]
+pip install reprompt[llama]
 ```
 
 ## Kullanim
 
-Kullanicidan gelen her istegi once clarify-prompt'a gonder:
+Kullanicidan gelen her istegi once reprompt'a gonder:
 
 ```bash
-clarify-prompt --target claude-code "kullanicinin ham istegi"
+reprompt --target claude-code "kullanicinin ham istegi"
 ```
 
 Donen ciktiyi kendi gorev tanimlamanin temeli olarak kullan.
 
 ## API ile kullanim (self-hosted)
 
-Eger clarify-prompt sunucusu calisiyorsa:
+Eger reprompt sunucusu calisiyorsa:
 
 ```bash
 curl -s http://localhost:8741/v1/rewrite \
@@ -33,4 +33,4 @@ curl -s http://localhost:8741/v1/rewrite \
 
 - `--target claude-code` secildiginde cikti XML etiketli formatta gelir
 - `--explain` flagi ile neden bu degisikliklerin yapildigini da gorebilirsin
-- Modeli degistirmek icin `CLARIFY_PROMPT_MODEL_PATH` env degiskenini ayarla
+- Modeli degistirmek icin `REPROMPT_MODEL_PATH` env degiskenini ayarla

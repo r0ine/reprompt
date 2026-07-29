@@ -2,16 +2,16 @@ from __future__ import annotations
 
 import pytest
 
-from clarify_prompt.errors import TargetProfileError
-from clarify_prompt.prompts.selector import select_system_prompt
-from clarify_prompt.prompts.types import DETAIL_LEVELS, TARGET_PROFILES, TASK_PROFILES
+from reprompt.errors import TargetProfileError
+from reprompt.prompts.selector import select_system_prompt
+from reprompt.prompts.types import DETAIL_LEVELS, TARGET_PROFILES, TASK_PROFILES
 
 
 @pytest.mark.parametrize("target", TARGET_PROFILES)
 def test_all_target_profiles_load(target: str) -> None:
     prompt_text = select_system_prompt(target)
 
-    assert "clarify-prompt core protocol" in prompt_text
+    assert "reprompt core protocol" in prompt_text
     assert f"Target profile: {target}" in prompt_text
     assert len(prompt_text) > 6_000
 
@@ -37,7 +37,7 @@ def test_profiles_are_composed_in_stable_order() -> None:
         detail="exhaustive",
     )
 
-    core_at = prompt_text.index("clarify-prompt core protocol")
+    core_at = prompt_text.index("reprompt core protocol")
     task_at = prompt_text.index("Task profile: debugging")
     detail_at = prompt_text.index("Detail level: exhaustive")
     target_at = prompt_text.index("Target profile: codex")

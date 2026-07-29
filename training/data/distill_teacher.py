@@ -11,7 +11,7 @@ import click
 from rich.console import Console
 from tenacity import retry, stop_after_attempt, wait_exponential
 
-from clarify_prompt.prompts.selector import select_system_prompt
+from reprompt.prompts.selector import select_system_prompt
 from training.data.schema import Record, RecordMeta
 
 console = Console()

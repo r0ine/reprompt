@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import pytest
 
-from clarify_prompt.prompts.types import TARGET_PROFILES
+from reprompt.prompts.types import TARGET_PROFILES
 from training.data.augment import CONVERTERS
 from training.data.generate_v2 import FORMATTERS
 

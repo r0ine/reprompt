@@ -8,7 +8,7 @@ import click
 import yaml
 from rich.console import Console
 
-from clarify_prompt.prompts.selector import select_system_prompt
+from reprompt.prompts.selector import select_system_prompt
 
 console = Console()
 
@@ -17,7 +17,7 @@ console = Console()
 @click.option("--config", "-c", type=click.Path(exists=True, path_type=Path), required=True)
 def main(config: Path) -> None:
     cfg = yaml.safe_load(config.read_text(encoding="utf-8"))
-    console.rule(f"[bold]clarify-prompt SFT — {cfg['base_model']}")
+    console.rule(f"[bold]reprompt SFT — {cfg['base_model']}")
     _train(cfg)
 
 

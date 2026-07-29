@@ -1,25 +1,25 @@
 services:
-  clarify-prompt:
+  reprompt:
     build: .
     ports:
       - "8741:8741"
     volumes:
       - ./models:/models:ro
     environment:
-      - CLARIFY_PROMPT_MODEL_PATH=/models/clarify-prompt.gguf
-      - CLARIFY_PROMPT_GPU_LAYERS=33
+      - REPROMPT_MODEL_PATH=/models/reprompt.gguf
+      - REPROMPT_GPU_LAYERS=33
     restart: unless-stopped
 
   # GPU variant — uncomment if NVIDIA Container Toolkit is installed
-  # clarify-prompt-gpu:
+  # reprompt-gpu:
   #   build: .
   #   ports:
   #     - "8741:8741"
   #   volumes:
   #     - ./models:/models:ro
   #   environment:
-  #     - CLARIFY_PROMPT_MODEL_PATH=/models/clarify-prompt.gguf
-  #     - CLARIFY_PROMPT_GPU_LAYERS=33
+  #     - REPROMPT_MODEL_PATH=/models/reprompt.gguf
+  #     - REPROMPT_GPU_LAYERS=33
   #   deploy:
   #     resources:
   #       reservations:

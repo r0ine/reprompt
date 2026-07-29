@@ -8,7 +8,7 @@ from pathlib import Path
 
 import pytest
 
-from clarify_prompt.prompts.types import TARGET_PROFILES
+from reprompt.prompts.types import TARGET_PROFILES
 
 SYNTHETIC_PATH = Path("training/datasets/raw/synthetic_v2.jsonl")
 TRAIN_PATH = Path("training/datasets/train.jsonl")

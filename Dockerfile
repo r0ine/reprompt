@@ -11,8 +11,8 @@ COPY src/ src/
 
 RUN pip install --no-cache-dir ".[all]"
 
-ENV CLARIFY_PROMPT_MODEL_PATH=/models/clarify-prompt.gguf
+ENV REPROMPT_MODEL_PATH=/models/reprompt.gguf
 EXPOSE 8741
 
-ENTRYPOINT ["clarify-prompt"]
+ENTRYPOINT ["reprompt"]
 CMD ["serve", "--host", "0.0.0.0", "--port", "8741"]

@@ -1,4 +1,4 @@
-"""Command-line entry point for clarify-prompt."""
+"""Command-line entry point for reprompt."""
 
 from __future__ import annotations
 
@@ -7,13 +7,13 @@ import sys
 import click
 from rich.console import Console
 
-from clarify_prompt import __version__
-from clarify_prompt.config.loader import load_config
-from clarify_prompt.engine.factory import make_engine
-from clarify_prompt.errors import ClarifyPromptError
-from clarify_prompt.postproc.pipeline import postprocess
-from clarify_prompt.prompts.selector import select_system_prompt
-from clarify_prompt.prompts.types import DETAIL_LEVELS, TARGET_PROFILES, TASK_PROFILES
+from reprompt import __version__
+from reprompt.config.loader import load_config
+from reprompt.engine.factory import make_engine
+from reprompt.errors import RepromptError
+from reprompt.postproc.pipeline import postprocess
+from reprompt.prompts.selector import select_system_prompt
+from reprompt.prompts.types import DETAIL_LEVELS, TARGET_PROFILES, TASK_PROFILES
 
 TARGET_CHOICES = list(TARGET_PROFILES)
 TASK_CHOICES = list(TASK_PROFILES)
@@ -30,16 +30,16 @@ class _DefaultGroup(click.Group):
 
 
 @click.group(cls=_DefaultGroup, context_settings={"help_option_names": ["-h", "--help"]})
-@click.version_option(__version__, prog_name="clarify-prompt")
+@click.version_option(__version__, prog_name="reprompt")
 def app():
     """Rewrite raw prompts into optimized prompts for downstream LLMs.
 
     \b
     Examples:
-      clarify-prompt "reflection kodu patliyor duzelt"
-      clarify-prompt rewrite --target chatgpt "api rate limiting ekle"
-      echo "long messy request" | clarify-prompt rewrite --stdin
-      clarify-prompt serve --port 8741
+      reprompt "reflection kodu patliyor duzelt"
+      reprompt rewrite --target chatgpt "api rate limiting ekle"
+      echo "long messy request" | reprompt rewrite --stdin
+      reprompt serve --port 8741
     """
 
 
@@ -87,8 +87,8 @@ def rewrite(user_prompt, target, task, detail, model, explain, as_json, stdin):
         raw = engine.generate(sys_prompt, user_prompt)
         result = postprocess(raw, as_json=as_json)
         click.echo(result)
-    except ClarifyPromptError as exc:
-        err_console.print(f"[bold red]clarify-prompt error:[/bold red] {exc}")
+    except RepromptError as exc:
+        err_console.print(f"[bold red]reprompt error:[/bold red] {exc}")
         sys.exit(exc.exit_code)
     except click.ClickException:
         raise
@@ -110,23 +110,23 @@ def serve(host, port, model, workers, reload):
 
     \b
     Examples:
-      clarify-prompt serve
-      clarify-prompt serve --port 9000 --model ~/models/clarify.gguf
+      reprompt serve
+      reprompt serve --port 9000 --model ~/models/clarify.gguf
     """
     import os
 
     if model:
-        os.environ["CLARIFY_PROMPT_MODEL_PATH"] = str(model)
+        os.environ["REPROMPT_MODEL_PATH"] = str(model)
 
     try:
         import uvicorn
     except ImportError:
-        click.echo("uvicorn is required: pip install clarify-prompt[api]", err=True)
+        click.echo("uvicorn is required: pip install reprompt[api]", err=True)
         sys.exit(1)
 
-    click.echo(f"clarify-prompt v{__version__} — starting API on {host}:{port}")
+    click.echo(f"reprompt v{__version__} — starting API on {host}:{port}")
     uvicorn.run(
-        "clarify_prompt.api.server:app",
+        "reprompt.api.server:app",
         host=host,
         port=port,
         workers=workers,

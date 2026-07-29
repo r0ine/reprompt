@@ -1,4 +1,4 @@
-"""Sample VRAM and RSS while `clarify-prompt` is running."""
+"""Sample VRAM and RSS while `reprompt` is running."""
 
 from __future__ import annotations
 
@@ -22,7 +22,7 @@ def cli(prompt: str, target: str, interval: float) -> None:
 
 def run(prompt: str, target: str, interval: float) -> None:
     proc = subprocess.Popen(
-        ["clarify-prompt", "-t", target, prompt],
+        ["reprompt", "-t", target, prompt],
         stdout=subprocess.DEVNULL,
         stderr=subprocess.DEVNULL,
     )

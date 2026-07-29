@@ -6,7 +6,7 @@ import shutil
 import subprocess
 from pathlib import Path
 
-from clarify_prompt.errors import GenerationError, ModelLoadError
+from reprompt.errors import GenerationError, ModelLoadError
 
 
 class LlamaSubprocessBackend:
@@ -31,12 +31,12 @@ class LlamaSubprocessBackend:
         if not self.model_path.exists():
             raise ModelLoadError(
                 f"model file not found: {self.model_path}. "
-                "Set CLARIFY_PROMPT_MODEL_PATH or use --model."
+                "Set REPROMPT_MODEL_PATH or use --model."
             )
         if shutil.which(self.cli_binary) is None:
             raise ModelLoadError(
                 f"llama-cli binary not on PATH: {self.cli_binary}. "
-                "Install llama.cpp or set CLARIFY_PROMPT_LLAMA_BIN."
+                "Install llama.cpp or set REPROMPT_LLAMA_BIN."
             )
 
     def generate(
@@ -101,7 +101,7 @@ class LlamaPyBackend:
         except ImportError as exc:
             raise ModelLoadError(
                 "llama_cpp Python binding not installed. "
-                "Install with: pip install clarify-prompt[llama]"
+                "Install with: pip install reprompt[llama]"
             ) from exc
         self.model_path = Path(model_path).expanduser()
         if not self.model_path.exists():

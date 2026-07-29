@@ -4,8 +4,8 @@ import shutil
 
 import pytest
 
-from clarify_prompt.engine.llama import LlamaSubprocessBackend
-from clarify_prompt.errors import ModelLoadError
+from reprompt.engine.llama import LlamaSubprocessBackend
+from reprompt.errors import ModelLoadError
 
 pytestmark = pytest.mark.slow
 

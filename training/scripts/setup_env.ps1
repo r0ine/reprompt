@@ -1,8 +1,8 @@
-# Windows PowerShell — clarify-prompt egitim ortami kurulumu.
+# Windows PowerShell — reprompt egitim ortami kurulumu.
 # Kullanim: PowerShell'de yonetici degil, normal sekilde:  .\training\scripts\setup_env.ps1
 $ErrorActionPreference = "Stop"
 
-Write-Host "=== clarify-prompt: egitim ortami kurulumu (Windows) ===" -ForegroundColor Cyan
+Write-Host "=== reprompt: egitim ortami kurulumu (Windows) ===" -ForegroundColor Cyan
 
 # 1) Python surumu kontrol
 $py = python --version 2>$null

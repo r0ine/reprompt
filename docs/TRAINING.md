@@ -1,4 +1,4 @@
-# Kendi clarify-prompt modelini eğit
+# Kendi reprompt modelini eğit
 
 Bu rehber, aynı pipeline'ı kendi verinle koşturmak isteyen geliştiriciler için.
 
@@ -85,7 +85,7 @@ python -m training.pack.convert_to_gguf \
   --out training/outputs/gguf
 
 python -m training.pack.verify_gguf \
-  training/outputs/gguf/clarify-prompt-qwen2.5-7b-q4_k_m.gguf \
+  training/outputs/gguf/reprompt-qwen2.5-7b-q4_k_m.gguf \
   --target-gib 4.5 \
   --tolerance-gib 0.75
 ```
@@ -97,7 +97,7 @@ yerine geçmez.
 ## Yayın (HF Hub)
 
 ```bash
-python -m training.pack.push_hf --repo <ORG>/clarify-prompt-qwen2.5-7b-v1 \
+python -m training.pack.push_hf --repo <ORG>/reprompt-qwen2.5-7b-v1 \
     --path training/outputs/gguf
 ```
 

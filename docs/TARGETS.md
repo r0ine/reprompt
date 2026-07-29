@@ -7,8 +7,8 @@ Prompt derleyicisi üç bağımsız seçim kullanır:
 - ayrıntı seviyesi, aynı kapsamın ne kadar derin tarif edileceğini belirler.
 
 Kaynak sabitleri
-`src/clarify_prompt/prompts/types.py` dosyasında, metin profilleri ise
-`src/clarify_prompt/prompts/` altında tutulur.
+`src/reprompt/prompts/types.py` dosyasında, metin profilleri ise
+`src/reprompt/prompts/` altında tutulur.
 
 ## Hedef araçlar
 
@@ -71,7 +71,7 @@ kotası doldurmaz; yalnızca verilen iş açısından karar değiştiren konular
 
 ## Yeni hedef ekleme
 
-1. `src/clarify_prompt/prompts/targets/<ad>.md` dosyasını ekle.
+1. `src/reprompt/prompts/targets/<ad>.md` dosyasını ekle.
 2. Dosyayı `TargetProfile` ve `TARGET_PROFILES` içine ekle.
 3. Hedefin gerçekten farklı davranışını yaz; yalnızca marka adını değiştiren profil ekleme.
 4. `tests/unit/test_selector.py` parametrik testlerinin yeni dosyayı yüklediğini doğrula.

@@ -4,8 +4,8 @@ from __future__ import annotations
 
 import json
 
-from clarify_prompt.postproc.strip_code_fence import strip_outer_code_fence
-from clarify_prompt.postproc.strip_preamble import strip_preamble
+from reprompt.postproc.strip_code_fence import strip_outer_code_fence
+from reprompt.postproc.strip_preamble import strip_preamble
 
 
 def postprocess(raw: str, as_json: bool = False) -> str:

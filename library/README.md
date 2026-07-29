@@ -1,4 +1,4 @@
-# Clarify Prompt Markdown Kütüphanesi
+# Reprompt Markdown Kütüphanesi
 
 Bu dizin, ham bir isteği uygulanabilir ve denetlenebilir bir prompta dönüştürmek için
 hazırlanmış 1 GiB'lık yerel başvuru corpus'unu barındırır. Kütüphane yalnızca Markdown

@@ -1,11 +1,11 @@
-# Model Card — clarify-prompt
+# Model Card — reprompt
 
 > **Durum:** Bu model kartı MVP release öncesi için taslak. Gerçek rakamlar Faz 4
 > sonrası doldurulacak.
 
 ## Model detayları
 
-- **Ad:** `clarify-prompt-qwen2.5-7b-v1` (planlanan)
+- **Ad:** `reprompt-qwen2.5-7b-v1` (planlanan)
 - **Base:** [Qwen2.5-7B-Instruct](https://huggingface.co/Qwen/Qwen2.5-7B-Instruct)
 - **Yöntem:** rank 32 rsLoRA (QLoRA / 4-bit NF4), Unsloth framework
 - **Boyut:** Adapter boyutu eğitim ayarına bağlı; GGUF Q4_K_M yaklaşık 4–5 GiB
@@ -55,11 +55,11 @@ cevaplama, kod üretme, güvenlik filtresi değildir — sadece prompt yeniden y
 ## Atıf
 
 ```bibtex
-@software{clarify_prompt_2026,
-  title = {clarify-prompt: Local Prompt Engineer AI},
+@software{reprompt_2026,
+  title = {reprompt: Local Prompt Engineer AI},
   author = {Kemal},
   year = {2026},
-  url = {https://github.com/clarify/clarify-prompt},
+  url = {https://github.com/r0ine/reprompt},
 }
 ```
 

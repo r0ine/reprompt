@@ -1,4 +1,4 @@
-# clarify-prompt
+# reprompt
 
 Ham, eksik, tek satırlık istekleri hedef LLM'in tam anlayacağı yapılandırılmış prompta çeviren açık kaynak yapay zeka.
 
@@ -10,7 +10,7 @@ almaz; yayımlanmadan önce ayrı değerlendirme raporu gerekir.
 
 ## Ne yapıyor?
 
-Sen `"şu bug'ı çöz"` yazdığında, clarify-prompt arada durup bu isteği alıyor, ne istediğini anlıyor ve hedef LLM'e (Claude Code, ChatGPT, Cursor) göndermeden önce şu yapıya oturtuyor:
+Sen `"şu bug'ı çöz"` yazdığında, reprompt arada durup bu isteği alıyor, ne istediğini anlıyor ve hedef LLM'e (Claude Code, ChatGPT, Cursor) göndermeden önce şu yapıya oturtuyor:
 
 ```
 Görev → Bağlam → Kısıtlar → Kabul kriterleri → Çıktı formatı
@@ -23,22 +23,22 @@ modelin doğruluğunu garanti etmez.
 
 ```bash
 # kurulum
-pip install clarify-prompt[all]
+pip install reprompt[all]
 
 # CLI ile doğrudan kullanım
-clarify-prompt "reflection kodu yeni sürümde patlıyor, düzelt"
+reprompt "reflection kodu yeni sürümde patlıyor, düzelt"
 
 # farklı hedef LLM için
-clarify-prompt -t chatgpt "write a blog post about SEO"
-clarify-prompt -t cursor  "bu component'i temizle"
-echo "uzun karışık istek" | clarify-prompt rewrite --stdin -t claude-code
+reprompt -t chatgpt "write a blog post about SEO"
+reprompt -t cursor  "bu component'i temizle"
+echo "uzun karışık istek" | reprompt rewrite --stdin -t claude-code
 
 # API sunucusu başlat
-clarify-prompt serve --port 8741
+reprompt serve --port 8741
 
 # Python SDK
-from clarify_prompt import ClarifyEngine
-engine = ClarifyEngine(model="model.gguf")
+from reprompt import RepromptEngine
+engine = RepromptEngine(model="model.gguf")
 result = engine.rewrite("login yap", target="claude-code")
 ```
 
@@ -70,9 +70,9 @@ Reflection kodunu yeni Java sürümüne uyarla — mevcut kod derlemede hata ver
 </acceptance>
 ```
 
-## Neden clarify-prompt?
+## Neden reprompt?
 
-| Sorun | clarify-prompt ile |
+| Sorun | reprompt ile |
 |---|---|
 | "Şunu yap" yazıyorsun, LLM yanlış anlıyor, 3 tur düzeltiyorsun | Prompt optimize ediliyor, LLM ilk seferde doğru çıktı veriyor |
 | Her LLM'in farklı prompt stili var (XML, markdown, direktif) | `--target` bayrağıyla hedef LLM'e göre profil seçiliyor |
@@ -152,9 +152,9 @@ Scratch hattı şu araştırma soruları için tutulur:
 - **Donanım:** RTX 4060 8GB — tam eğitim tek GPU'da
 - **Inference:** PyTorch native veya GGUF export (llama.cpp uyumlu)
 - **API:** FastAPI REST server, OpenAI-uyumlu endpoint, batch desteği
-- **SDK:** Python SDK (`ClarifyEngine` sınıfı) — tek satır entegrasyon
+- **SDK:** Python SDK (`RepromptEngine` sınıfı) — tek satır entegrasyon
 - **Docker:** Self-hosting için hazır Dockerfile + docker-compose
-- **Dağıtım:** PyPI (`pip install clarify-prompt[all]`) + model ağırlıkları ayrı
+- **Dağıtım:** PyPI (`pip install reprompt[all]`) + model ağırlıkları ayrı
 
 ## Beklenen metrikler
 
@@ -168,8 +168,8 @@ Scratch hattı şu araştırma soruları için tutulur:
 ## Klasör düzeni
 
 ```
-clarify-prompt/
-├── src/clarify_prompt/        # inference paketi
+reprompt/
+├── src/reprompt/              # inference paketi
 │   ├── cli/                   # Click CLI
 │   ├── engine/                # llama.cpp + python backend
 │   ├── prompts/               # sistem promptu + 4 profil
@@ -207,9 +207,9 @@ clarify-prompt/
 
 Her platformla tak-çalıştır entegrasyon. Üç yol var:
 
-1. **CLI:** `clarify-prompt "istediğin şey"` — doğrudan kullan
-2. **API:** `clarify-prompt serve` — self-hosted REST API sunucusu
-3. **SDK:** `ClarifyEngine(model=...).rewrite(...)` — Python'dan programatik erişim
+1. **CLI:** `reprompt "istediğin şey"` — doğrudan kullan
+2. **API:** `reprompt serve` — self-hosted REST API sunucusu
+3. **SDK:** `RepromptEngine(model=...).rewrite(...)` — Python'dan programatik erişim
 
 API'nin OpenAI-uyumlu endpointi var: mevcut araçların base URL'ini değiştirip doğrudan bağlayabilirsin.
 
@@ -223,7 +223,7 @@ Detaylı rehberler `integrations/` klasöründe: Claude Code, ChatGPT, Cursor, G
 - Veri kalitesi: dil dağılımı, hedef profil dengesi, sızıntı, tekrar kontrolü
 - Evaluation: structure_score (4 profil), length_ratio sınır değerleri
 - REST API: health, targets, rewrite, batch, OpenAI-compat endpoint
-- SDK: ClarifyEngine, RewriteResult, batch_rewrite
+- SDK: RepromptEngine, RewriteResult, batch_rewrite
 - CLI: rewrite komutu, serve subcommand, kısayol sözdizimi
 - Config, postprocessing, selector testleri
 
@@ -231,10 +231,6 @@ Detaylı rehberler `integrations/` klasöründe: Claude Code, ChatGPT, Cursor, G
 
 - Kod: [MIT](LICENSE)
 - Model ağırlıkları: [Apache-2.0](LICENSE-model)
-
-## clarify ailesi
-
-Bu proje, **clarify** adında AI araç serisinin ilk üyesi.
 
 ---
 
@@ -248,5 +244,5 @@ Bu proje, **clarify** adında AI araç serisinin ilk üyesi.
 
 ---
 
-> clarify-prompt, prompt mühendisliğini otomatikleştiren açık kaynak bir araçtır.
+> reprompt, prompt mühendisliğini otomatikleştiren açık kaynak bir araçtır.
 > Bir sorunuz veya katkınız varsa GitHub Issues veya Discord üzerinden ulaşabilirsiniz.

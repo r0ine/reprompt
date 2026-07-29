@@ -11,8 +11,8 @@ import yaml
 from platformdirs import user_config_dir
 from pydantic import ValidationError
 
-from clarify_prompt.config.schema import Config
-from clarify_prompt.errors import ConfigError
+from reprompt.config.schema import Config
+from reprompt.errors import ConfigError
 
 
 def load_config(
@@ -40,16 +40,16 @@ def load_config(
 
 
 def _load_defaults() -> dict[str, Any]:
-    text = files("clarify_prompt.config").joinpath("default.yaml").read_text(encoding="utf-8")
+    text = files("reprompt.config").joinpath("default.yaml").read_text(encoding="utf-8")
     return yaml.safe_load(text) or {}
 
 
 def _load_user_yaml() -> dict[str, Any]:
-    custom = os.environ.get("CLARIFY_PROMPT_CONFIG")
+    custom = os.environ.get("REPROMPT_CONFIG")
     if custom:
         path = Path(custom).expanduser()
     else:
-        path = Path(user_config_dir("clarify-prompt")) / "config.yaml"
+        path = Path(user_config_dir("reprompt")) / "config.yaml"
     if not path.exists():
         return {}
     try:
@@ -60,17 +60,17 @@ def _load_user_yaml() -> dict[str, Any]:
 
 def _load_env() -> dict[str, Any]:
     env: dict[str, Any] = {}
-    if v := os.environ.get("CLARIFY_PROMPT_MODEL_PATH"):
+    if v := os.environ.get("REPROMPT_MODEL_PATH"):
         env.setdefault("model", {})["path"] = v
-    if v := os.environ.get("CLARIFY_PROMPT_TARGET"):
+    if v := os.environ.get("REPROMPT_TARGET"):
         env["target"] = v
-    if v := os.environ.get("CLARIFY_PROMPT_TASK"):
+    if v := os.environ.get("REPROMPT_TASK"):
         env["task"] = v
-    if v := os.environ.get("CLARIFY_PROMPT_DETAIL"):
+    if v := os.environ.get("REPROMPT_DETAIL"):
         env["detail"] = v
-    if v := os.environ.get("CLARIFY_PROMPT_LOG_LEVEL"):
+    if v := os.environ.get("REPROMPT_LOG_LEVEL"):
         env.setdefault("log", {})["level"] = v
-    if v := os.environ.get("CLARIFY_PROMPT_LLAMA_BIN"):
+    if v := os.environ.get("REPROMPT_LLAMA_BIN"):
         env.setdefault("llama", {})["cli_binary"] = v
     return env
 

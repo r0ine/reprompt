@@ -1,4 +1,4 @@
-# Clarify Prompt Markdown Kütüphanesi Manifesti
+# Reprompt Markdown Kütüphanesi Manifesti
 
 Bu dosya `tools/markdown_library.py` tarafından üretilir. Boyut ve özet değerleri
 kütüphane doğrulamasında kaynak olarak kullanılır.

@@ -11,7 +11,7 @@ from rich.console import Console
 from rich.panel import Panel
 from rich.table import Table
 
-from clarify_prompt.prompts.selector import select_system_prompt
+from reprompt.prompts.selector import select_system_prompt
 
 console = Console()
 

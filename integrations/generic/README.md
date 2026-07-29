@@ -1,14 +1,14 @@
 # Genel Entegrasyon Rehberi
 
-clarify-prompt herhangi bir LLM ile calisir. Tek yapman gereken,
-kullanici girdisini once clarify-prompt'tan gecirmek.
+reprompt herhangi bir LLM ile calisir. Tek yapman gereken,
+kullanici girdisini once reprompt'tan gecirmek.
 
 ## Hizli baslangic
 
 ### 1. Kur
 
 ```bash
-pip install clarify-prompt[all]
+pip install reprompt[all]
 ```
 
 ### 2. Modeli indir
@@ -18,22 +18,22 @@ Egitilmis GGUF modelini `models/` klasorune koy:
 ```bash
 mkdir models
 # model dosyasini buraya kopyala
-export CLARIFY_PROMPT_MODEL_PATH=./models/clarify-prompt.gguf
+export REPROMPT_MODEL_PATH=./models/reprompt.gguf
 ```
 
 ### 3. CLI ile kullan
 
 ```bash
-clarify-prompt "login sayfasi yap mobilden de erisilebiilsin"
-clarify-prompt --target chatgpt "api rate limiting ekle"
-clarify-prompt --target claude-code --explain "veritabani baglantisi patliyor duzelt"
-echo "karmasik istek" | clarify-prompt --stdin --target cursor
+reprompt "login sayfasi yap mobilden de erisilebiilsin"
+reprompt --target chatgpt "api rate limiting ekle"
+reprompt --target claude-code --explain "veritabani baglantisi patliyor duzelt"
+echo "karmasik istek" | reprompt --stdin --target cursor
 ```
 
 ### 4. API sunucusu baslat
 
 ```bash
-clarify-prompt serve --port 8741
+reprompt serve --port 8741
 ```
 
 ### 5. API'yi kullan
@@ -47,9 +47,9 @@ curl -X POST http://localhost:8741/v1/rewrite \
 ## Python SDK
 
 ```python
-from clarify_prompt import ClarifyEngine
+from reprompt import RepromptEngine
 
-engine = ClarifyEngine(model="models/clarify-prompt.gguf")
+engine = RepromptEngine(model="models/reprompt.gguf")
 result = engine.rewrite("login sayfasi yap", target="claude-code")
 print(result.text)
 
@@ -76,7 +76,7 @@ import httpx
 CLARIFY_URL = "http://localhost:8741/v1/rewrite"
 
 def with_clarify(raw_prompt: str, target: str = "generic") -> str:
-    """Ham prompt'u clarify-prompt ile optimize eder."""
+    """Ham prompt'u reprompt ile optimize eder."""
     resp = httpx.post(CLARIFY_URL, json={
         "prompt": raw_prompt,
         "target": target,
@@ -101,9 +101,9 @@ llm_response = your_llm_api(optimized)
 
 | Degisken                     | Aciklama                    | Varsayilan     |
 |-----------------------------|-----------------------------|---------------|
-| CLARIFY_PROMPT_MODEL_PATH   | GGUF model dosya yolu       | (zorunlu)     |
-| CLARIFY_PROMPT_TARGET       | Varsayilan hedef profil     | generic       |
-| CLARIFY_PROMPT_BACKEND      | Inference backend           | llama         |
-| CLARIFY_PROMPT_GPU_LAYERS   | GPU'ya yuklenecek katman    | 33            |
-| CLARIFY_PROMPT_CTX_SIZE     | Context pencere boyutu      | 4096          |
-| CLARIFY_PROMPT_LOG_LEVEL    | Log seviyesi                | INFO          |
+| REPROMPT_MODEL_PATH   | GGUF model dosya yolu       | (zorunlu)     |
+| REPROMPT_TARGET       | Varsayilan hedef profil     | generic       |
+| REPROMPT_BACKEND      | Inference backend           | llama         |
+| REPROMPT_GPU_LAYERS   | GPU'ya yuklenecek katman    | 33            |
+| REPROMPT_CTX_SIZE     | Context pencere boyutu      | 4096          |
+| REPROMPT_LOG_LEVEL    | Log seviyesi                | INFO          |

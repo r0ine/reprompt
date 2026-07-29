@@ -24,7 +24,7 @@ from pathlib import Path
 import click
 import requests
 
-from clarify_prompt.prompts.types import TARGET_PROFILES
+from reprompt.prompts.types import TARGET_PROFILES
 
 SECRETS_PATH = Path(r"C:\Users\Kemal\Desktop\Workspace\secrets\.env")
 OUT_PATH = Path("training/datasets/raw/llm_seeds.jsonl")

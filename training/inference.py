@@ -13,7 +13,7 @@ import yaml
 from rich.console import Console
 from rich.panel import Panel
 
-from clarify_prompt.prompts.types import TARGET_PROFILES
+from reprompt.prompts.types import TARGET_PROFILES
 
 console = Console()
 

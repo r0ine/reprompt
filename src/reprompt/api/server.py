@@ -1,6 +1,6 @@
 """REST API server — self-hostable prompt rewriting service.
 
-    clarify-prompt serve --model ~/models/clarify.gguf --port 8741
+    reprompt serve --model ~/models/clarify.gguf --port 8741
     curl -X POST http://localhost:8741/v1/rewrite \
          -H 'Content-Type: application/json' \
          -d '{"prompt": "login sayfası yap", "target": "claude-code"}'
@@ -17,9 +17,9 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
-from clarify_prompt import __version__
-from clarify_prompt.config.schema import BackendName
-from clarify_prompt.prompts.types import (
+from reprompt import __version__
+from reprompt.config.schema import BackendName
+from reprompt.prompts.types import (
     DETAIL_LEVELS,
     TARGET_PROFILES,
     TASK_PROFILES,
@@ -27,22 +27,22 @@ from clarify_prompt.prompts.types import (
     TargetProfile,
     TaskProfile,
 )
-from clarify_prompt.sdk import ClarifyEngine
+from reprompt.sdk import RepromptEngine
 
-_engine: ClarifyEngine | None = None
+_engine: RepromptEngine | None = None
 
 
-def _get_engine() -> ClarifyEngine:
+def _get_engine() -> RepromptEngine:
     global _engine
     if _engine is None:
-        model_path = os.environ.get("CLARIFY_PROMPT_MODEL_PATH")
-        backend_value = os.environ.get("CLARIFY_PROMPT_BACKEND", "llama")
+        model_path = os.environ.get("REPROMPT_MODEL_PATH")
+        backend_value = os.environ.get("REPROMPT_BACKEND", "llama")
         if backend_value not in ("llama", "llama-py"):
             raise RuntimeError(f"unsupported inference backend: {backend_value}")
         backend = cast(BackendName, backend_value)
-        gpu_layers = int(os.environ.get("CLARIFY_PROMPT_GPU_LAYERS", "33"))
-        ctx = int(os.environ.get("CLARIFY_PROMPT_CTX_SIZE", "8192"))
-        _engine = ClarifyEngine(
+        gpu_layers = int(os.environ.get("REPROMPT_GPU_LAYERS", "33"))
+        ctx = int(os.environ.get("REPROMPT_CTX_SIZE", "8192"))
+        _engine = RepromptEngine(
             model=model_path,
             backend=backend,
             n_gpu_layers=gpu_layers,
@@ -58,7 +58,7 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(
-    title="clarify-prompt",
+    title="reprompt",
     version=__version__,
     description="Prompt rewriting API — turns raw inputs into structured, optimized prompts.",
     lifespan=lifespan,
@@ -193,7 +193,7 @@ def batch_rewrite(req: BatchRequest):
 @app.post("/v1/chat/completions")
 def openai_compat(body: dict):
     """OpenAI-compatible endpoint so tools expecting the ChatCompletions API
-    can talk to clarify-prompt without code changes."""
+    can talk to reprompt without code changes."""
     messages = body.get("messages", [])
     user_msg = ""
     target: TargetProfile = "generic"
@@ -226,6 +226,6 @@ def openai_compat(body: dict):
                 "finish_reason": "stop",
             }
         ],
-        "model": "clarify-prompt",
+        "model": "reprompt",
         "usage": {"prompt_tokens": 0, "completion_tokens": 0, "total_tokens": 0},
     }

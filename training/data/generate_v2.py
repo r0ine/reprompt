@@ -23,7 +23,7 @@ import click
 from rich.console import Console
 from rich.progress import BarColumn, Progress, SpinnerColumn, TextColumn
 
-from clarify_prompt.prompts.types import TARGET_PROFILES
+from reprompt.prompts.types import TARGET_PROFILES
 
 console = Console()
 

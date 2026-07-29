@@ -12,8 +12,8 @@
 ## Sadece kullanıcı (inference) tarafı
 
 ```bash
-git clone https://github.com/clarify/clarify-prompt.git
-cd clarify-prompt
+git clone https://github.com/r0ine/reprompt.git
+cd reprompt
 python -m venv .venv
 # Windows
 .venv\Scripts\Activate.ps1
@@ -26,8 +26,8 @@ pip install -e .
 Bu kadar. Test:
 
 ```bash
-clarify-prompt --version
-clarify-prompt --help
+reprompt --version
+reprompt --help
 ```
 
 ## Model dosyası
@@ -35,23 +35,23 @@ clarify-prompt --help
 Model henüz release edilmedi. Faz 4 sonrası:
 
 ```bash
-huggingface-cli download clarify/clarify-prompt-qwen2.5-7b-v1 \
+huggingface-cli download r0ine/reprompt-qwen2.5-7b-v1 \
     --include "*.gguf" \
-    --local-dir ~/.clarify-prompt/models
-export CLARIFY_PROMPT_MODEL_PATH=~/.clarify-prompt/models/clarify-prompt-qwen2.5-7b-q4_k_m.gguf
+    --local-dir ~/.reprompt/models
+export REPROMPT_MODEL_PATH=~/.reprompt/models/reprompt-qwen2.5-7b-q4_k_m.gguf
 ```
 
 ## Kullanım
 
 ```bash
-clarify-prompt "reflection kodu patliyor duzelt"
+reprompt "reflection kodu patliyor duzelt"
 
-clarify-prompt --target chatgpt "long messy request"
+reprompt --target chatgpt "long messy request"
 
-echo "uzun karışık istek" | clarify-prompt --stdin --target cursor
+echo "uzun karışık istek" | reprompt --stdin --target cursor
 
-clarify-prompt --explain "..."   # değişikliklerin özetini de göster
-clarify-prompt --json "..."      # JSON çıktı
+reprompt --explain "..."   # değişikliklerin özetini de göster
+reprompt --json "..."      # JSON çıktı
 ```
 
 ## Geliştirici / eğitim tarafı
@@ -94,6 +94,6 @@ make test-slow     # entegrasyon testleri (llama.cpp gerekir)
 
 ## Sorun giderme
 
-- `CLARIFY_PROMPT_MODEL_PATH` bulunamadı hatası: `.env`'i doldur veya `--model` bayrağını kullan.
-- `llama-cli not on PATH`: `PROMPTSMITH_LLAMA_BIN` yerine `CLARIFY_PROMPT_LLAMA_BIN` kullan, yolu ver.
+- `REPROMPT_MODEL_PATH` bulunamadı hatası: `.env`'i doldur veya `--model` bayrağını kullan.
+- `llama-cli not on PATH`: `PROMPTSMITH_LLAMA_BIN` yerine `REPROMPT_LLAMA_BIN` kullan, yolu ver.
 - Windows'ta Unsloth kurulumu başarısız: `bash training/scripts/setup_env.sh` (WSL2 fallback).

@@ -4,8 +4,8 @@ from __future__ import annotations
 
 from importlib.resources import files
 
-from clarify_prompt.errors import TargetProfileError
-from clarify_prompt.prompts.types import (
+from reprompt.errors import TargetProfileError
+from reprompt.prompts.types import (
     DETAIL_LEVELS,
     TARGET_PROFILES,
     TASK_PROFILES,
@@ -44,7 +44,7 @@ def select_system_prompt(
 
 def _load(name: str) -> str:
     try:
-        return files("clarify_prompt.prompts").joinpath(name).read_text(encoding="utf-8")
+        return files("reprompt.prompts").joinpath(name).read_text(encoding="utf-8")
     except FileNotFoundError as exc:
         raise TargetProfileError(f"system prompt missing: {name}") from exc
 
@@ -52,7 +52,7 @@ def _load(name: str) -> str:
 def _load_profile(group: str, name: str) -> str:
     try:
         return (
-            files(f"clarify_prompt.prompts.{group}")
+            files(f"reprompt.prompts.{group}")
             .joinpath(f"{name}.md")
             .read_text(encoding="utf-8")
         )

@@ -1,8 +1,8 @@
 """Public API for programmatic use.
 
-from clarify_prompt import ClarifyEngine
+from reprompt import RepromptEngine
 
-engine = ClarifyEngine(model="path/to/model.gguf")
+engine = RepromptEngine(model="path/to/model.gguf")
 result = engine.rewrite("login sayfası yap", target="claude-code")
 print(result.text)
 """
@@ -13,12 +13,12 @@ import os
 from dataclasses import dataclass
 from pathlib import Path
 
-from clarify_prompt.config.schema import BackendName, Config, LlamaConfig, ModelConfig
-from clarify_prompt.engine.backend import InferenceBackend
-from clarify_prompt.engine.factory import make_engine
-from clarify_prompt.postproc.pipeline import postprocess
-from clarify_prompt.prompts.selector import select_system_prompt
-from clarify_prompt.prompts.types import DetailLevel, TargetProfile, TaskProfile
+from reprompt.config.schema import BackendName, Config, LlamaConfig, ModelConfig
+from reprompt.engine.backend import InferenceBackend
+from reprompt.engine.factory import make_engine
+from reprompt.postproc.pipeline import postprocess
+from reprompt.prompts.selector import select_system_prompt
+from reprompt.prompts.types import DetailLevel, TargetProfile, TaskProfile
 
 
 @dataclass(frozen=True)
@@ -30,7 +30,7 @@ class RewriteResult:
     detail: DetailLevel = "balanced"
 
 
-class ClarifyEngine:
+class RepromptEngine:
     """Stateful wrapper around the inference pipeline.
 
     Loads the model once, reuses across calls.
@@ -43,7 +43,7 @@ class ClarifyEngine:
         n_gpu_layers: int = 33,
         ctx_size: int = 8192,
     ) -> None:
-        model_path = str(model) if model else os.environ.get("CLARIFY_PROMPT_MODEL_PATH")
+        model_path = str(model) if model else os.environ.get("REPROMPT_MODEL_PATH")
         self._model_path = model_path
         cfg = Config(
             model=ModelConfig(path=model_path, backend=backend),

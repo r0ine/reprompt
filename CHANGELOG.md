@@ -13,7 +13,7 @@ sürümleme [Semantic Versioning](https://semver.org/spec/v2.0.0.html)'e uyar.
 - Qwen 2.5 7B üretim QLoRA konfigürasyonu ve 4,5 GiB sınıfı GGUF doğrulama aracı.
 - Prompt sistemi tasarım belgesi ve profil geliştirme rehberi.
 - Proje iskeleti, klasör düzeni, kök dosyaları.
-- Inference paketi (`src/clarify_prompt/`) taslak halinde: CLI, engine (llama.cpp backend), prompts (target profilleri), config, postproc.
+- Inference paketi (`src/reprompt/`) taslak halinde: CLI, engine (llama.cpp backend), prompts (target profilleri), config, postproc.
 - Eğitim pipeline'ı (`training/`) taslak halinde: data toplama, SFT, eval, pack.
 - Test iskeleti, bench scriptleri, docs klasörü.
 - PLAN.md — 2200+ satır uygulama planı, 20 bölüm.

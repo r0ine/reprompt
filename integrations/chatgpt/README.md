@@ -1,6 +1,6 @@
 # ChatGPT Entegrasyonu
 
-clarify-prompt'u ChatGPT Custom GPT olarak veya API uzerinden kullanabilirsin.
+reprompt'u ChatGPT Custom GPT olarak veya API uzerinden kullanabilirsin.
 
 ## Yontem 1: Custom GPT
 
@@ -13,7 +13,7 @@ clarify-prompt'u ChatGPT Custom GPT olarak veya API uzerinden kullanabilirsin.
 ```yaml
 openapi: "3.1.0"
 info:
-  title: clarify-prompt
+  title: reprompt
   version: "0.1.0"
   description: Prompt rewriting service
 servers:
@@ -62,14 +62,14 @@ paths:
 ChatGPT ayarlarindan "Custom Instructions" bolumune su metni ekle:
 
 ```
-Her aldığım isteği önce clarify-prompt API'sine gönder
+Her aldığım isteği önce reprompt API'sine gönder
 (POST https://YOUR_SERVER:8741/v1/rewrite, target: "chatgpt").
 Dönen rewritten_prompt'u asıl görev tanımın olarak kullan.
 ```
 
 ## Yontem 3: API Proxy
 
-clarify-prompt'un OpenAI-uyumlu endpoint'ini kullan:
+reprompt'un OpenAI-uyumlu endpoint'ini kullan:
 
 ```bash
 curl http://localhost:8741/v1/chat/completions \

@@ -3,7 +3,7 @@ requires = ["hatchling>=1.24"]
 build-backend = "hatchling.build"
 
 [project]
-name = "clarify-prompt"
+name = "reprompt"
 version = "0.1.0"
 description = "Local prompt engineer AI — rewrites your prompts for better LLM output."
 readme = "README.md"
@@ -50,21 +50,21 @@ dev = [
 ]
 
 [project.scripts]
-clarify-prompt = "clarify_prompt.cli.main:app"
+reprompt = "reprompt.cli.main:app"
 
 [project.urls]
-Homepage = "https://github.com/r0ine/clarify-prompt"
-Documentation = "https://github.com/r0ine/clarify-prompt/tree/main/docs"
-Repository = "https://github.com/r0ine/clarify-prompt"
-Issues = "https://github.com/r0ine/clarify-prompt/issues"
-Changelog = "https://github.com/r0ine/clarify-prompt/blob/main/CHANGELOG.md"
+Homepage = "https://github.com/r0ine/reprompt"
+Documentation = "https://github.com/r0ine/reprompt/tree/main/docs"
+Repository = "https://github.com/r0ine/reprompt"
+Issues = "https://github.com/r0ine/reprompt/issues"
+Changelog = "https://github.com/r0ine/reprompt/blob/main/CHANGELOG.md"
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/clarify_prompt"]
+packages = ["src/reprompt"]
 
 [tool.hatch.build.targets.sdist]
 include = [
-    "src/clarify_prompt",
+    "src/reprompt",
     "README.md",
     "LICENSE",
     "LICENSE-model",

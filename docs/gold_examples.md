@@ -16,7 +16,7 @@ Her örnek şu formatta:
     ```
 
 `XXX` sıralı üç haneli sayı. Geçerli `hedef` değerleri
-`src/clarify_prompt/prompts/types.py` içindeki `TARGET_PROFILES` sabitinden alınır.
+`src/reprompt/prompts/types.py` içindeki `TARGET_PROFILES` sabitinden alınır.
 
 ---
 

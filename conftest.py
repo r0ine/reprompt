@@ -25,5 +25,5 @@ def sample_prompts_path(fixtures_dir: Path) -> Path:
 @pytest.fixture
 def tmp_config_dir(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
     """Isolated config dir for tests — prevents user config from leaking in."""
-    monkeypatch.setenv("CLARIFY_PROMPT_CONFIG", str(tmp_path / "config.yaml"))
+    monkeypatch.setenv("REPROMPT_CONFIG", str(tmp_path / "config.yaml"))
     return tmp_path

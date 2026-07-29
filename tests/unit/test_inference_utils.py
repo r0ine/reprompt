@@ -10,7 +10,7 @@ from pathlib import Path
 
 import pytest
 
-from clarify_prompt.prompts.types import TARGET_PROFILES
+from reprompt.prompts.types import TARGET_PROFILES
 
 spm = pytest.importorskip("sentencepiece", reason="sentencepiece kurulu degil")
 

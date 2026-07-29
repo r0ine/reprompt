@@ -1,6 +1,6 @@
-# clarify-prompt
+# reprompt
 
-`clarify-prompt`, kısa veya dağınık bir isteği başka bir dil modelinin doğrudan
+`reprompt`, kısa veya dağınık bir isteği başka bir dil modelinin doğrudan
 uygulayabileceği net bir çalışma tarifine dönüştürür. İsteği cevaplamaz; hedefi, bağlamı,
 sınırları, teslimleri ve doğrulama ölçütlerini koruyarak yeniden yazar.
 
@@ -72,11 +72,11 @@ Subprocess backend kullanıldığında `llama-cli` dosyasının `PATH` içinde b
 `.env.example` dosyasını temel alarak en az model yolunu ayarla:
 
 ```dotenv
-CLARIFY_PROMPT_MODEL_PATH=C:\models\clarify-prompt-qwen2.5-7b-q4_k_m.gguf
-CLARIFY_PROMPT_TARGET=codex
-CLARIFY_PROMPT_TASK=auto
-CLARIFY_PROMPT_DETAIL=balanced
-CLARIFY_PROMPT_CTX_SIZE=8192
+REPROMPT_MODEL_PATH=C:\models\reprompt-qwen2.5-7b-q4_k_m.gguf
+REPROMPT_TARGET=codex
+REPROMPT_TASK=auto
+REPROMPT_DETAIL=balanced
+REPROMPT_CTX_SIZE=8192
 ```
 
 Gerçek anahtarları veya model yollarını kaynak koda ekleme. `.env` dosyası Git tarafından
@@ -87,13 +87,13 @@ yok sayılır.
 Kısa kullanım:
 
 ```powershell
-clarify-prompt "API ara sıra 500 dönüyor, nedenini bul ve düzelt"
+reprompt "API ara sıra 500 dönüyor, nedenini bul ve düzelt"
 ```
 
 Hedef, görev ve ayrıntı seçerek:
 
 ```powershell
-clarify-prompt rewrite `
+reprompt rewrite `
   --target codex `
   --task debugging `
   --detail exhaustive `
@@ -103,7 +103,7 @@ clarify-prompt rewrite `
 Araştırma promptu:
 
 ```powershell
-clarify-prompt rewrite -t gemini --task research --detail deep `
+reprompt rewrite -t gemini --task research --detail deep `
   "2026 için küçük işletme e-fatura seçeneklerini karşılaştır"
 ```
 
@@ -111,7 +111,7 @@ Standart girdi ve JSON çıktı:
 
 ```powershell
 Get-Content .\ham-istek.txt |
-  clarify-prompt rewrite --stdin --target chatgpt --detail deep --json
+  reprompt rewrite --stdin --target chatgpt --detail deep --json
 ```
 
 `--explain`, yeniden yazılan prompttan sonra en fazla dört maddelik `Why` bölümü ekler.
@@ -120,10 +120,10 @@ Gizli düşünme zinciri üretmez.
 ## Python SDK
 
 ```python
-from clarify_prompt import ClarifyEngine
+from reprompt import RepromptEngine
 
-engine = ClarifyEngine(
-    model=r"C:\models\clarify-prompt-qwen2.5-7b-q4_k_m.gguf",
+engine = RepromptEngine(
+    model=r"C:\models\reprompt-qwen2.5-7b-q4_k_m.gguf",
     ctx_size=8192,
 )
 
@@ -151,7 +151,7 @@ rewrites = engine.batch_rewrite(
 ## REST API
 
 ```powershell
-clarify-prompt serve --host 127.0.0.1 --port 8741
+reprompt serve --host 127.0.0.1 --port 8741
 ```
 
 ```powershell
@@ -227,7 +227,7 @@ Dosya başlığı ve boyut aralığı:
 
 ```powershell
 python -m training.pack.verify_gguf `
-  training/outputs/gguf/clarify-prompt-qwen2.5-7b-q4_k_m.gguf `
+  training/outputs/gguf/reprompt-qwen2.5-7b-q4_k_m.gguf `
   --target-gib 4.5 `
   --tolerance-gib 0.75
 ```
@@ -263,7 +263,7 @@ ağırlığı olmadan çalışır.
 ## Dizinler
 
 ```text
-src/clarify_prompt/   CLI, SDK, API, promptlar ve çıkarım
+src/reprompt/         CLI, SDK, API, promptlar ve çıkarım
 training/             veri, SFT, değerlendirme ve paketleme
 tests/                birim ve entegrasyon testleri
 bench/                gecikme ve bellek ölçümleri

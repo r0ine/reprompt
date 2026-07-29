@@ -2,7 +2,7 @@
 # WSL2 / Linux fallback. Windows'ta Unsloth kurulumu takilirsa bunu WSL'de calistir.
 set -euo pipefail
 
-echo "=== clarify-prompt: egitim ortami kurulumu (WSL2 / Linux) ==="
+echo "=== reprompt: egitim ortami kurulumu (WSL2 / Linux) ==="
 
 if ! command -v python3 >/dev/null 2>&1; then
     echo "python3 yok. Once python3.12 kur." >&2

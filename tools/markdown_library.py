@@ -14,7 +14,7 @@ from pathlib import Path
 GIB = 1024**3
 MIB = 1024**2
 GENERATOR_VERSION = "1.0"
-FILE_SIGNATURE = "<!-- clarify-prompt-library:v1 -->"
+FILE_SIGNATURE = "<!-- reprompt-library:v1 -->"
 MANIFEST_ROW = re.compile(r"^\| `(?P<path>[^`]+)` \| (?P<size>\d+) \| `(?P<sha>[0-9a-f]{64})` \|$")
 
 DOMAINS = (
@@ -149,7 +149,7 @@ class LibraryFile:
 
 
 def mixed_number(seed: int, salt: int) -> int:
-    payload = f"{seed}:{salt}:clarify-prompt-library".encode()
+    payload = f"{seed}:{salt}:reprompt-library".encode()
     return int.from_bytes(hashlib.blake2s(payload, digest_size=8).digest(), "big")
 
 
@@ -372,7 +372,7 @@ def write_manifest(
     relative_output = os.path.relpath(output, manifest.parent).replace("\\", "/")
     generated_at = datetime.now(timezone.utc).replace(microsecond=0).isoformat()
     lines = [
-        "# Clarify Prompt Markdown Kütüphanesi Manifesti",
+        "# Reprompt Markdown Kütüphanesi Manifesti",
         "",
         "Bu dosya `tools/markdown_library.py` tarafından üretilir. Boyut ve özet değerleri",
         "kütüphane doğrulamasında kaynak olarak kullanılır.",
@@ -557,7 +557,7 @@ def project_root() -> Path:
 def parser() -> argparse.ArgumentParser:
     root = project_root()
     cli = argparse.ArgumentParser(
-        description="Deterministik Clarify Prompt Markdown kütüphanesini üretir ve doğrular."
+        description="Deterministik Reprompt Markdown kütüphanesini üretir ve doğrular."
     )
     cli.add_argument(
         "--output",

@@ -16,7 +16,7 @@ from pathlib import Path
 
 from rich.console import Console
 
-from clarify_prompt.prompts.types import TARGET_PROFILES
+from reprompt.prompts.types import TARGET_PROFILES
 
 console = Console()
 

@@ -1,7 +1,7 @@
 .PHONY: help setup-user setup-dev data train eval pack test test-slow lint format bench clean
 
 help:
-	@echo "clarify-prompt make hedefleri:"
+	@echo "reprompt make hedefleri:"
 	@echo "  setup-user   Kullanici (inference) bagimliliklarini kur"
 	@echo "  setup-dev    Kullanici + gelistirme (test, lint) bagimliliklari"
 	@echo "  data         Egitim veri setini olustur (training/data/build.py)"

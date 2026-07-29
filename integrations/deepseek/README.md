@@ -1,6 +1,6 @@
 # DeepSeek Entegrasyonu
 
-clarify-prompt'u DeepSeek ile kullanmak icin API proxy yontemi kullanilir.
+reprompt'u DeepSeek ile kullanmak icin API proxy yontemi kullanilir.
 DeepSeek, OpenAI-uyumlu API kullanir.
 
 ## Python ile kullanim

@@ -1,4 +1,4 @@
-"""Measure end-to-end latency of `clarify-prompt` on a small prompt set."""
+"""Measure end-to-end latency of `reprompt` on a small prompt set."""
 
 from __future__ import annotations
 
@@ -35,7 +35,7 @@ def run(runs: int = 20, target: str = "generic") -> None:
         prompt = SAMPLE_PROMPTS[i % len(SAMPLE_PROMPTS)]
         start = time.perf_counter()
         proc = subprocess.run(
-            ["clarify-prompt", "-t", target, prompt],
+            ["reprompt", "-t", target, prompt],
             capture_output=True,
             text=True,
             check=False,
@@ -57,7 +57,7 @@ def run(runs: int = 20, target: str = "generic") -> None:
     p99 = times[int(len(times) * 0.99)]
     mean = statistics.mean(times)
 
-    table = Table(title="clarify-prompt latency")
+    table = Table(title="reprompt latency")
     table.add_column("metric")
     table.add_column("seconds")
     table.add_row("runs", str(len(times)))

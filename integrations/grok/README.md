@@ -1,16 +1,16 @@
 # Grok Entegrasyonu
 
-clarify-prompt'u Grok (xAI) ile kullanmak icin API proxy yontemi kullanilir.
+reprompt'u Grok (xAI) ile kullanmak icin API proxy yontemi kullanilir.
 
 ## Kurulum
 
-1. clarify-prompt sunucusunu baslat:
+1. reprompt sunucusunu baslat:
 
 ```bash
-clarify-prompt serve --port 8741
+reprompt serve --port 8741
 ```
 
-2. Grok API isteklerini gondermeden once prompt'u clarify-prompt'tan gecir:
+2. Grok API isteklerini gondermeden once prompt'u reprompt'tan gecir:
 
 ```python
 import httpx
@@ -35,12 +35,12 @@ def ask_grok(raw_prompt: str, grok_api_key: str) -> str:
 
 ## Alternatif: OpenAI-uyumlu endpoint
 
-Grok, OpenAI-uyumlu API kullanir. clarify-prompt'un
+Grok, OpenAI-uyumlu API kullanir. reprompt'un
 `/v1/chat/completions` endpoint'i de ayni formati destekler,
 dogrudan pipe'layabilirsin:
 
 ```bash
-# once clarify-prompt ile optimize et
+# once reprompt ile optimize et
 OPTIMIZED=$(curl -s http://localhost:8741/v1/rewrite \
   -H "Content-Type: application/json" \
   -d "{\"prompt\": \"$RAW_PROMPT\", \"target\": \"generic\"}" \
