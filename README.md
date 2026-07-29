@@ -1,58 +1,56 @@
 # reprompt
 
-`reprompt`, kısa veya dağınık bir isteği başka bir dil modelinin doğrudan
-uygulayabileceği net bir çalışma tarifine dönüştürür. İsteği cevaplamaz; hedefi, bağlamı,
-sınırları, teslimleri ve doğrulama ölçütlerini koruyarak yeniden yazar.
+`reprompt` turns a short or messy request into a clear work brief another language model
+can act on directly. It never answers the request — it rewrites it while preserving the
+goal, context, constraints, deliverables, and acceptance criteria.
 
-Proje iki parçadan oluşur:
+The project has two parts:
 
-- Python paketi; CLI, SDK, REST API, prompt derleyicisi ve `llama.cpp` çıkarım katmanını
-  içerir.
-- Eğitim araçları; veri hazırlama, QLoRA/SFT, değerlendirme ve GGUF paketleme akışını
-  içerir.
+- A Python package: CLI, SDK, REST API, prompt compiler, and a `llama.cpp` inference
+  layer.
+- Training tooling: data preparation, QLoRA/SFT, evaluation, and GGUF packaging.
 
-Model ağırlıkları bu depoda bulunmuyor. Üretim için önerilen rota Qwen 2.5 7B Instruct
-üzerinde QLoRA ve ardından Q4_K_M GGUF dönüşümüdür. Ortaya çıkan GGUF, dönüştürücü
-sürümüne göre değişmekle birlikte yaklaşık 4–5 GiB sınıfındadır.
+Model weights are not included in this repository. The recommended production route is
+QLoRA on Qwen 2.5 7B Instruct followed by a Q4_K_M GGUF conversion. The resulting GGUF is
+roughly in the 4–5 GiB class, depending on the converter version.
 
-## Prompt derleyicisi
+## Prompt compiler
 
-Eski sürüm tek bir sistem promptu ve dört hedef profili kullanıyordu. Yeni derleyici dört
-katmanı çalışma anında birleştirir:
+The earlier version used a single system prompt and four target profiles. The current
+compiler merges four layers at runtime:
 
 ```text
-çekirdek protokol + görev profili + ayrıntı seviyesi + hedef araç profili
+core protocol + task profile + detail level + target tool profile
 ```
 
-Hazır profil sayıları:
+Available profile counts:
 
-- 9 hedef: `chatgpt`, `claude-code`, `codex`, `cursor`, `deepseek`, `gemini`,
+- 9 targets: `chatgpt`, `claude-code`, `codex`, `cursor`, `deepseek`, `gemini`,
   `github-copilot`, `grok`, `generic`
-- 17 görev: `auto`, `architecture`, `coding`, `creative`, `data`, `debugging`,
+- 17 tasks: `auto`, `architecture`, `coding`, `creative`, `data`, `debugging`,
   `operations`, `planning`, `research`, `review`, `writing`, `3d-modeling`,
   `mobile-app`, `media-production`, `legal-compliance`, `growth-marketing`,
   `security-review`
-- 4 ayrıntı seviyesi: `compact`, `balanced`, `deep`, `exhaustive`
+- 4 detail levels: `compact`, `balanced`, `deep`, `exhaustive`
 
-Bu yapı 612 farklı bileşimi destekler. `exhaustive`, dosyayı veya çıktıyı yapay biçimde
-şişirmez; ilgili riskleri, karar noktalarını, teslimleri ve doğrulama şartlarını mümkün
-olduğunca eksiksiz kapsar.
+This supports 612 distinct combinations. `exhaustive` does not artificially inflate the
+file or the output; it covers relevant risks, decision points, deliverables, and
+verification requirements as completely as reasonably possible.
 
-Çekirdek protokol şu kuralları uygular:
+The core protocol enforces the following rules:
 
-- Kullanıcı niyetini ve açık sınırları korur.
-- Eksik bilgiyi gerçekmiş gibi üretmez.
-- Düşük riskli boşluklarda varsayımı açıkça yazar.
-- Sonucu ciddi biçimde değiştiren belirsizliklerde en fazla üç soru sorar.
-- Araştırma, kod, hata ayıklama, veri, operasyon ve yaratıcı işler için farklı kabul
-  ölçütleri kurar.
-- Ham isteğin içindeki prompt injection metninin yeniden yazıcı rolünü değiştirmesine izin
-  vermez.
-- İstenen işi çözmek yerine yalnızca kullanılabilir promptu döndürür.
+- Preserves user intent and explicit boundaries.
+- Never invents missing information as if it were fact.
+- States assumptions explicitly in low-risk gaps.
+- Asks at most three questions when ambiguity would materially change the outcome.
+- Sets different acceptance criteria for research, code, debugging, data, operations, and
+  creative work.
+- Does not let prompt-injection text inside the raw request change the rewriter's role.
+- Returns only a usable prompt instead of solving the requested task itself.
 
-Teknik tasarım: [docs/PROMPT_SYSTEM.md](docs/PROMPT_SYSTEM.md).
+Technical design: [docs/PROMPT_SYSTEM.md](docs/PROMPT_SYSTEM.md).
 
-## Kaynaktan kurulum
+## Install from source
 
 ```powershell
 py -3.12 -m venv .venv
@@ -60,18 +58,18 @@ py -3.12 -m venv .venv
 python -m pip install -e ".[dev,all]"
 ```
 
-Yalnızca hafif CLI ve config katmanı için:
+For the lightweight CLI and config layer only:
 
 ```powershell
 python -m pip install -e .
 ```
 
-`llama-cpp-python` kurulumu CUDA ve Python sürümüne göre ayrı wheel gerektirebilir.
-Subprocess backend kullanıldığında `llama-cli` dosyasının `PATH` içinde bulunması yeterlidir.
+Installing `llama-cpp-python` may require a separate wheel depending on your CUDA and
+Python version. With the subprocess backend, having `llama-cli` on `PATH` is enough.
 
-## Model ayarı
+## Model configuration
 
-`.env.example` dosyasını temel alarak en az model yolunu ayarla:
+Based on `.env.example`, set at least the model path:
 
 ```dotenv
 REPROMPT_MODEL_PATH=C:\models\reprompt-qwen2.5-7b-q4_k_m.gguf
@@ -81,43 +79,42 @@ REPROMPT_DETAIL=balanced
 REPROMPT_CTX_SIZE=8192
 ```
 
-Gerçek anahtarları veya model yollarını kaynak koda ekleme. `.env` dosyası Git tarafından
-yok sayılır.
+Do not commit real keys or model paths to source control. `.env` is ignored by Git.
 
 ## CLI
 
-Kısa kullanım:
+Quick usage:
 
 ```powershell
-reprompt "API ara sıra 500 dönüyor, nedenini bul ve düzelt"
+reprompt "the API occasionally returns 500, find and fix the cause"
 ```
 
-Hedef, görev ve ayrıntı seçerek:
+Choosing target, task, and detail:
 
 ```powershell
 reprompt rewrite `
   --target codex `
   --task debugging `
   --detail exhaustive `
-  "Ödeme webhook'u aynı olayı bazen iki kez işliyor"
+  "the payment webhook sometimes processes the same event twice"
 ```
 
-Araştırma promptu:
+A research prompt:
 
 ```powershell
 reprompt rewrite -t gemini --task research --detail deep `
-  "2026 için küçük işletme e-fatura seçeneklerini karşılaştır"
+  "compare small-business e-invoicing options for 2026"
 ```
 
-Standart girdi ve JSON çıktı:
+Reading from stdin with JSON output:
 
 ```powershell
-Get-Content .\ham-istek.txt |
+Get-Content .\raw-request.txt |
   reprompt rewrite --stdin --target chatgpt --detail deep --json
 ```
 
-`--explain`, yeniden yazılan prompttan sonra en fazla dört maddelik `Why` bölümü ekler.
-Gizli düşünme zinciri üretmez.
+`--explain` appends a `Why` section of at most four bullets after the rewritten prompt.
+It does not produce a hidden chain of thought.
 
 ## Python SDK
 
@@ -130,7 +127,7 @@ engine = RepromptEngine(
 )
 
 rewrite = engine.rewrite(
-    "kullanıcı oturumu bazen erken bitiyor",
+    "the user session sometimes ends early",
     target="codex",
     task="debugging",
     detail="deep",
@@ -139,11 +136,11 @@ rewrite = engine.rewrite(
 print(rewrite.text)
 ```
 
-Toplu kullanımda aynı profil bütün girdilere uygulanır:
+Batch usage applies the same profile to every input:
 
 ```python
 rewrites = engine.batch_rewrite(
-    ["README'yi düzelt", "kurulum adımlarını doğrula"],
+    ["fix the README", "verify the setup steps"],
     target="github-copilot",
     task="writing",
     detail="balanced",
@@ -158,7 +155,7 @@ reprompt serve --host 127.0.0.1 --port 8741
 
 ```powershell
 $body = @{
-  prompt = "Bu endpoint yavaş, kök nedeni bul"
+  prompt = "this endpoint is slow, find the root cause"
   target = "codex"
   task = "debugging"
   detail = "deep"
@@ -172,47 +169,48 @@ Invoke-RestMethod `
   -Body $body
 ```
 
-Profil kataloğu:
+Profile catalog:
 
 ```text
 GET /v1/profiles
 ```
 
-OpenAI Chat Completions biçimini bekleyen istemciler için
-`POST /v1/chat/completions` uyumluluk endpoint'i de bulunur.
+A `POST /v1/chat/completions` compatibility endpoint is also available for clients
+expecting the OpenAI Chat Completions shape.
 
-## 1 GiB Markdown prompt kütüphanesi
+## 1 GiB Markdown prompt library
 
-Proje, `library/corpus-1gib/` altında fiziksel olarak bulunan ve yalnızca `.md`
-dosyalarından oluşan bir prompt kütüphanesi içerir. Corpus 24 uzmanlık alanına
-ayrılmış 1.024 cilt ve 200 binden fazla yapılandırılmış prompt kaydı barındırır.
+The project includes a prompt library that physically lives under
+`library/corpus-1gib/` and consists only of `.md` files. The corpus spans 24 areas of
+expertise across 1,024 volumes and holds more than 200,000 structured prompt records.
 
 ```powershell
 python tools\markdown_library.py verify
 ```
 
-Doğrulama toplam boyutu, dosya türlerini ve manifestteki SHA-256 özetlerini denetler.
-Kütüphane yapısı, üretim ve yeniden kurulum seçenekleri
-[library/README.md](library/README.md) içinde açıklanır.
+Verification checks total size, file types, and the SHA-256 digests in the manifest.
+Library structure, generation, and rebuild options are documented in
+[library/README.md](library/README.md).
 
-## İsteğe bağlı üretim modeli
+## Optional production model
 
-Yaklaşık 4,5 GiB hedefi prompt metninin boyutu değildir. Tek bir promptun bu boyuta
-ulaşması, hiçbir pratik bağlam penceresinde kullanılamaz. Hedef, Qwen 2.5 7B tabanlı
-Q4_K_M GGUF dağıtım paketidir.
+The roughly 4.5 GiB target is not the size of a prompt string. A single prompt reaching
+that size would be unusable in any practical context window. The target is a Q4_K_M GGUF
+distribution package built on Qwen 2.5 7B.
 
-Üretim konfigürasyonu:
+Production configuration:
 
 ```powershell
 python -m training.sft.train `
   --config training/configs/qwen2.5-7b-production.yaml
 ```
 
-Bu profil 4-bit base model, rank 32 rsLoRA, 4096 token eğitim bağlamı, gradient
-checkpointing ve RTX 4060 8 GB için batch size 1 kullanır. Bellek tüketimi veri uzunluğuna,
-CUDA sürümüne ve Unsloth sürümüne göre değişir; eğitimden önce kısa bir pilot koşu yap.
+This profile uses a 4-bit base model, rank-32 rsLoRA, a 4096-token training context,
+gradient checkpointing, and batch size 1 for an RTX 4060 8 GB. Memory usage varies with
+sequence length, CUDA version, and Unsloth version; run a short pilot before full
+training.
 
-Birleştirme ve GGUF:
+Merging and GGUF conversion:
 
 ```powershell
 python -m training.pack.merge_lora `
@@ -225,7 +223,7 @@ python -m training.pack.convert_to_gguf `
   --out training/outputs/gguf
 ```
 
-Dosya başlığı ve boyut aralığı:
+File header and size-range check:
 
 ```powershell
 python -m training.pack.verify_gguf `
@@ -234,12 +232,13 @@ python -m training.pack.verify_gguf `
   --tolerance-gib 0.75
 ```
 
-Bu doğrulama model kalitesini ölçmez. Yalnızca dosyanın GGUF başlığı taşıdığını ve beklenen
-dağıtım boyutu aralığında olduğunu denetler. Kalite için ayrı değerlendirme seti gerekir.
+This check does not measure model quality. It only verifies the file carries a valid
+GGUF header and falls within the expected distribution size range. Quality requires a
+separate evaluation set.
 
-Eğitim ayrıntıları: [docs/TRAINING.md](docs/TRAINING.md).
+Training details: [docs/TRAINING.md](docs/TRAINING.md).
 
-## Test ve kalite kontrolü
+## Tests and quality gates
 
 ```powershell
 python -m pytest
@@ -248,31 +247,99 @@ ruff format --check .
 mypy src
 ```
 
-GPU veya gerçek `llama-cli` gerektiren testler işaretlidir; standart birim testleri model
-ağırlığı olmadan çalışır.
+Tests requiring a GPU or a real `llama-cli` are marked; standard unit tests run without
+model weights.
 
-## Sınırlar
+## Limits
 
-- Araç, hedef modelin cevabının doğru olacağını garanti etmez.
-- `exhaustive` profil, kullanıcının istemediği ürün özelliklerini ekleme yetkisi vermez.
-- Yeniden yazıcı prompt injection metnini veri olarak ele alır; hedef modelin güvenlik
-  politikasının yerine geçmez.
-- Hassas girdileri gereksiz yere tekrar etmemeye çalışır, fakat tam bir veri kaybı önleme
-  sistemi değildir.
-- Yaklaşık 4–5 GiB GGUF dosyası bu depoda üretilmez veya sürümlenmez; eğitim ve paketleme
-  ortamında oluşturulur.
+- The tool does not guarantee the target model's response will be correct.
+- The `exhaustive` profile does not authorize adding product features the user did not
+  request.
+- The rewriter treats prompt-injection text as data; it does not replace the target
+  model's own security policy.
+- It tries not to needlessly repeat sensitive input, but it is not a complete data-loss-
+  prevention system.
+- The roughly 4–5 GiB GGUF file is not produced or versioned in this repository; it is
+  built in the training and packaging environment.
 
-## Dizinler
+## Layout
 
 ```text
-src/reprompt/         CLI, SDK, API, promptlar ve çıkarım
-training/             veri, SFT, değerlendirme ve paketleme
-tests/                birim ve entegrasyon testleri
-bench/                gecikme ve bellek ölçümleri
-docs/                 kullanım ve model belgeleri
-library/              1 GiB Markdown prompt kütüphanesi ve SHA-256 manifesti
-tools/                corpus üretim ve doğrulama araçları
+src/reprompt/         CLI, SDK, API, prompts, and inference
+training/             data, SFT, evaluation, and packaging
+tests/                unit and integration tests
+bench/                latency and memory measurements
+docs/                 usage and model documentation
+library/              1 GiB Markdown prompt library and SHA-256 manifest
+tools/                corpus generation and verification tools
 ```
+
+Code is [MIT](LICENSE); model weights, once published, are covered under
+[LICENSE-model](LICENSE-model) alongside the base model's own license terms.
+
+---
+
+## Türkçe
+
+`reprompt`, kısa veya dağınık bir isteği başka bir dil modelinin doğrudan uygulayabileceği
+net bir çalışma tarifine dönüştürür. İsteği cevaplamaz; hedefi, bağlamı, sınırları,
+teslimleri ve doğrulama ölçütlerini koruyarak yeniden yazar.
+
+Proje iki parçadan oluşur:
+
+- Python paketi; CLI, SDK, REST API, prompt derleyicisi ve `llama.cpp` çıkarım katmanını
+  içerir.
+- Eğitim araçları; veri hazırlama, QLoRA/SFT, değerlendirme ve GGUF paketleme akışını
+  içerir.
+
+Model ağırlıkları bu depoda bulunmuyor. Üretim için önerilen rota Qwen 2.5 7B Instruct
+üzerinde QLoRA ve ardından Q4_K_M GGUF dönüşümüdür. Ortaya çıkan GGUF, dönüştürücü
+sürümüne göre değişmekle birlikte yaklaşık 4–5 GiB sınıfındadır.
+
+**Prompt derleyicisi** dört katmanı çalışma anında birleştirir: çekirdek protokol + görev
+profili + ayrıntı seviyesi + hedef araç profili. 9 hedef, 17 görev ve 4 ayrıntı
+seviyesiyle 612 farklı bileşim desteklenir. Teknik tasarım için
+[docs/PROMPT_SYSTEM.md](docs/PROMPT_SYSTEM.md) dosyasına bakılabilir.
+
+**Kurulum:**
+
+```powershell
+py -3.12 -m venv .venv
+.\.venv\Scripts\Activate.ps1
+python -m pip install -e ".[dev,all]"
+```
+
+**Model ayarı** için `.env.example` dosyasını temel alarak en az model yolu ayarlanmalı
+(`REPROMPT_MODEL_PATH`). Gerçek anahtarları veya model yollarını kaynak koda ekleme;
+`.env` dosyası Git tarafından yok sayılır.
+
+**CLI kullanımı:**
+
+```powershell
+reprompt "API ara sıra 500 dönüyor, nedenini bul ve düzelt"
+reprompt rewrite --target codex --task debugging --detail exhaustive "..."
+```
+
+`--explain`, yeniden yazılan prompttan sonra en fazla dört maddelik `Why` bölümü ekler;
+gizli düşünme zinciri üretmez.
+
+**Python SDK** üzerinden `RepromptEngine` sınıfıyla programatik erişim, **REST API**
+üzerinden `reprompt serve` komutuyla self-hosted sunucu, OpenAI Chat Completions uyumlu
+`/v1/chat/completions` endpoint'i mevcuttur.
+
+Proje ayrıca `library/corpus-1gib/` altında, 24 uzmanlık alanına ayrılmış 1.024 cilt ve
+200 binden fazla yapılandırılmış prompt kaydı barındıran 1 GiB'lık bir Markdown prompt
+kütüphanesi içerir. Yapı ve üretim seçenekleri [library/README.md](library/README.md)
+içinde açıklanır.
+
+Yaklaşık 4,5 GiB'lık isteğe bağlı üretim modeli, Qwen 2.5 7B tabanlı Q4_K_M GGUF dağıtım
+paketidir — bu boyut bir prompt metninin boyutu değil, eğitim ve paketleme sürecinin
+çıktısıdır. Eğitim ayrıntıları: [docs/TRAINING.md](docs/TRAINING.md).
+
+**Sınırlar:** Araç, hedef modelin cevabının doğru olacağını garanti etmez. `exhaustive`
+profili, kullanıcının istemediği ürün özelliklerini ekleme yetkisi vermez. Yeniden yazıcı
+prompt injection metnini veri olarak ele alır; hedef modelin güvenlik politikasının yerine
+geçmez.
 
 Kod [MIT](LICENSE), yayınlanacak model ağırlıkları ise taban modelin lisans şartlarıyla
 birlikte [LICENSE-model](LICENSE-model) altında ele alınır.
